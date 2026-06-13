@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #f1f5f9;
+  --color-foreground: #000000;
+  --color-card: #ffffff;
+  --color-border: #e2e8f0;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-sidebar: #0f172a;
+  --color-sidebar-hover: #1e293b;
+  --color-muted: #64748b;
+  --font-sans: var(--font-geist-sans), var(--font-noto-sinhala), system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground font-sans antialiased;
+}
+
+/* Sinhala-friendly labels */
+.label-si {
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner-dark {
+  border-color: rgba(0, 0, 0, 0.15);
+  border-top-color: #2563eb;
+}
+
+/* Form controls */
+.form-input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-black placeholder:text-slate-500 transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100;
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+}
+.form-label {
+  @apply mb-1.5 block text-sm font-bold text-black;
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+}
+.form-select {
+  @apply w-full cursor-pointer appearance-none rounded-lg border border-slate-300 bg-white bg-[length:1rem] bg-[right_0.75rem_center] bg-no-repeat px-3.5 py-2.5 pr-10 text-black placeholder:text-slate-500 transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-slate-100;
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+}
+
+/* Custom dropdown */
+.dropdown-trigger {
+  @apply relative flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm font-semibold transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-60;
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+}
+.dropdown-trigger-compact {
+  @apply px-3 py-1.5 text-sm;
+}
+.dropdown-trigger-open {
+  @apply border-primary ring-2 ring-primary/20;
+}
+.dropdown-menu {
+  @apply absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg;
+}
+.dropdown-option {
+  @apply cursor-pointer px-3.5 py-2.5 text-sm text-black transition hover:bg-slate-100;
+}
+.dropdown-option-selected {
+  @apply bg-primary/10 font-bold text-primary;
+}
+.dropdown-option-active {
+  @apply bg-slate-100;
+}
+.dropdown-option-empty {
+  @apply px-3.5 py-2.5 text-sm text-slate-500;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-success {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-warning {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60;
+}
+.btn-lg {
+  @apply px-5 py-3 text-base;
+}
+
+/* Cards */
+.card {
+  @apply rounded-xl border border-border bg-card p-5 shadow-sm;
+}
+.card-hover {
+  @apply rounded-xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md;
+}
+
+/* Alerts */
+.alert {
+  @apply rounded-lg px-4 py-3 text-sm font-bold;
+}
+.alert-success {
+  @apply rounded-lg bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-900;
+}
+.alert-error {
+  @apply rounded-lg bg-red-100 px-4 py-3 text-sm font-bold text-red-900;
+}
+.alert-info {
+  @apply rounded-lg bg-sky-100 px-4 py-3 text-sm font-bold text-sky-900;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex rounded-md px-2 py-0.5 text-xs font-bold;
+}
+.badge-admin {
+  @apply inline-flex rounded-md bg-red-600 px-2 py-0.5 text-xs font-bold text-white;
+}
+.badge-cashier {
+  @apply inline-flex rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-white;
+}
+.badge-stock {
+  @apply inline-flex rounded-md bg-sky-200 px-2 py-0.5 text-xs font-bold text-sky-900;
+}
+.badge-danger {
+  @apply inline-flex rounded-md bg-red-600 px-2 py-0.5 text-xs font-bold text-white;
+}
+.badge-warning {
+  @apply inline-flex rounded-md bg-amber-300 px-2 py-0.5 text-xs font-bold text-black;
+}
+
+/* Table */
+.data-table {
+  @apply w-full border-collapse text-sm;
+}
+.data-table th {
+  @apply bg-slate-800 px-4 py-3 text-left font-bold text-white;
+}
+.data-table td {
+  @apply border-b border-slate-200 px-4 py-3 text-black;
+}
+.data-table tr:hover td {
+  @apply bg-slate-50;
+}
+
+/* Auth page */
+.auth-page {
+  @apply relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4;
+}
+.auth-card {
+  @apply w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl;
+}
+
+/* Admin layout */
+.admin-shell {
+  @apply flex min-h-screen bg-background;
+}
+.admin-sidebar {
+  @apply fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-white transition-transform lg:translate-x-0;
+}
+.admin-sidebar-link {
+  @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-sidebar-hover hover:text-white;
+}
+.admin-sidebar-link-active {
+  @apply flex items-center gap-3 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-sidebar-hover hover:text-white;
+}
+.admin-main {
+  @apply flex min-h-screen flex-1 flex-col lg:ml-64;
+}
+.admin-topbar {
+  @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-4 shadow-sm lg:px-6;
+}
+.admin-content {
+  @apply flex-1 overflow-auto p-4 lg:p-6;
+}
+
+/* Billing print */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  @page { size: 80mm auto; margin: 0; }
+  body { background: white !important; }
+  .billing-print-area {
+    width: 76mm;
+    margin: 0 auto;
+    padding: 2mm 3mm;
+    font-size: 11px;
+    color: #000;
+  }
+}
+
+.print-only { display: none; }
+
+/* Modal overlay */
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4;
+}
+.modal-panel {
+  @apply w-full max-w-lg rounded-xl bg-card shadow-2xl;
+}
+.modal-footer-split {
+  @apply grid grid-cols-2 gap-3;
+}
