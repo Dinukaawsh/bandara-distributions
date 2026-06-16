@@ -35,15 +35,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'error', message: 'Not authenticated' }, { status: 401 });
     }
 
+    if (user.role.toLowerCase() === 'admin') {
+      return NextResponse.json({ status: 'error', message: 'Admins cannot process bills' }, { status: 403 });
+    }
+
     const body = await request.json();
     const total_amount = Number(body.total_amount) || 0;
     const total_profit = Number(body.total_profit) || 0;
+    const cash_paid = Number(body.cash_paid) || 0;
+    const change_given = Number(body.change_given) || 0;
     const cashier_name = String(body.cashier_name || user.full_name);
+    const cashier_username = String(body.cashier_username || user.username);
     const counter_no = String(body.counter_no || user.counter_no);
     const bill_items: BillItem[] = Array.isArray(body.bill_items) ? body.bill_items : [];
 
     if (bill_items.length === 0) {
       return NextResponse.json({ status: 'error', message: 'No items found in the bill' }, { status: 400 });
+    }
+
+    if (cash_paid < total_amount) {
+      return NextResponse.json({ status: 'error', message: 'Insufficient payment' }, { status: 400 });
     }
 
     const db = await getBillingDb();
@@ -53,7 +64,10 @@ export async function POST(request: NextRequest) {
       bill_no,
       total_amount,
       total_profit,
+      cash_paid,
+      change_given,
       cashier_name,
+      cashier_username,
       counter_no,
       created_at: new Date(),
     });

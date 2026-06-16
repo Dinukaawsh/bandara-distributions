@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BillPreviewModal } from '@/components/billing/BillPreviewModal';
+import { BillReceipt } from '@/components/billing/BillReceipt';
+import { ProductSearch } from '@/components/billing/ProductSearch';
 import { EndOfDayModal, type EndOfDayReport } from '@/components/modals/EndOfDayModal';
 import { Alert, Button, Card, Input, Modal, PageLoader } from '@/components/ui';
 import { useDialog } from '@/hooks/useDialog';
@@ -49,9 +52,18 @@ export default function BillingPage() {
   const [billNo, setBillNo] = useState('');
   const [billDate, setBillDate] = useState('--/--/----');
   const [billTime, setBillTime] = useState('--:--:--');
+  const [customerSession, setCustomerSession] = useState(1);
   const [savingProduct, setSavingProduct] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showItemsModal, setShowItemsModal] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [printing, setPrinting] = useState(false);
+  const [printReceipt, setPrintReceipt] = useState<{
+    billNo: string;
+    cashPaid: number;
+    changeDue: number;
+    items: BillItem[];
+  } | null>(null);
   const [endOfDayReport, setEndOfDayReport] = useState<EndOfDayReport | null>(null);
   const [showEndOfDayModal, setShowEndOfDayModal] = useState(false);
   const [adminForm, setAdminForm] = useState({
@@ -59,6 +71,7 @@ export default function BillingPage() {
   });
 
   const ln = getTranslations(lang);
+  const canBill = !isAdmin;
 
   const setLiveDateTime = useCallback(() => {
     const now = new Date();
@@ -80,66 +93,139 @@ export default function BillingPage() {
 
   const grandTotal = billItems.reduce((s, i) => s + i.total, 0);
   const totalQty = billItems.reduce((s, i) => s + i.qty, 0);
-  const totalSavings = billItems.reduce((s, i) => s + (i.marketPrice > i.ourPrice ? (i.marketPrice - i.ourPrice) * i.qty : 0), 0);
   const cash = parseFloat(cashPaid) || 0;
   const balance = cash - grandTotal;
   const changeDue = cashPaid !== '' && balance >= 0 ? balance : 0;
   const amountShort = cashPaid !== '' && balance < 0 ? Math.abs(balance) : 0;
 
-  const processBilling = useCallback(() => {
-    const code = barcode.trim();
-    const quantity = parseFloat(qty) || 1;
-    if (!code) { barcodeRef.current?.focus(); return; }
-    const prod = productsDb[code];
-    if (!prod) { setScanResult(ln.product_not_found); barcodeRef.current?.select(); return; }
+  const addProductToBill = useCallback((code: string, quantity = parseFloat(qty) || 1) => {
+    const trimmed = code.trim();
+    if (!trimmed) return false;
+    const prod = productsDb[trimmed];
+    if (!prod) {
+      setScanResult(ln.product_not_found);
+      return false;
+    }
     setBillItems((prev) => {
-      const existing = prev.find((i) => i.barcode === code);
+      const existing = prev.find((i) => i.barcode === trimmed);
       const marketPrice = Number(prod.market_price) || 0;
       const ourPrice = Number(prod.our_price) || 0;
       const costPrice = Number(prod.cost_price) || ourPrice * 0.95;
       if (existing) {
-        return prev.map((i) => i.barcode === code ? { ...i, qty: i.qty + quantity, total: (i.qty + quantity) * ourPrice, totalProfit: (i.qty + quantity) * (ourPrice - costPrice) } : i);
+        return prev.map((i) =>
+          i.barcode === trimmed
+            ? {
+                ...i,
+                qty: i.qty + quantity,
+                total: (i.qty + quantity) * ourPrice,
+                totalProfit: (i.qty + quantity) * (ourPrice - costPrice),
+              }
+            : i
+        );
       }
-      return [...prev, { barcode: code, name: prod.name, marketPrice, ourPrice, qty: quantity, total: ourPrice * quantity, totalProfit: (ourPrice - costPrice) * quantity }];
+      return [
+        ...prev,
+        {
+          barcode: trimmed,
+          name: prod.name,
+          marketPrice,
+          ourPrice,
+          qty: quantity,
+          total: ourPrice * quantity,
+          totalProfit: (ourPrice - costPrice) * quantity,
+        },
+      ];
     });
     setScanResult(`${ln.added}: ${prod.name}`);
-    setBarcode(''); setQty('1');
+    setBarcode('');
+    setQty('1');
     setTimeout(() => barcodeRef.current?.focus(), 50);
-  }, [barcode, qty, productsDb, ln]);
+    return true;
+  }, [productsDb, qty, ln]);
 
-  const resetBill = async (isAuto = false) => {
-    if (!isAuto) {
+  const processBilling = useCallback(() => {
+    addProductToBill(barcode);
+  }, [addProductToBill, barcode]);
+
+  const startNewCustomer = async () => {
+    if (billItems.length > 0) {
       const ok = await confirm({
-        title: t('බිල මකන්න', 'Clear Bill'),
-        message: ln.clear_confirm,
-        confirmVariant: 'danger',
+        title: t('නව ගනුදෙනුකරු', 'New Customer'),
+        message: t('වත්මන් බිල මකා නව සැසියක් ආරම්භ කරන්නද?', 'Clear current bill and start a new customer session?'),
+        confirmVariant: 'warning',
       });
       if (!ok) return;
     }
-    setBillItems([]); setCashPaid(''); setScanResult(''); setBarcode(''); setQty('1'); setBillNo('');
+    setBillItems([]);
+    setCashPaid('');
+    setScanResult('');
+    setBarcode('');
+    setQty('1');
+    setBillNo('');
+    setCustomerSession((s) => s + 1);
     setTimeout(() => barcodeRef.current?.focus(), 100);
   };
 
-  const triggerPrint = async () => {
+  const resetAfterSale = () => {
+    setBillItems([]);
+    setCashPaid('');
+    setScanResult('');
+    setBarcode('');
+    setQty('1');
+    setBillNo('');
+    setCustomerSession((s) => s + 1);
+    setTimeout(() => barcodeRef.current?.focus(), 100);
+  };
+
+  const openPreview = async () => {
     if (!billItems.length) {
       await alert({ title: t('දැනුම්දීම', 'Notice'), message: ln.add_products_first });
       return;
     }
     if (!cashPaid || cash < grandTotal) {
-      await alert({
-        title: t('දැනුම්දීම', 'Notice'),
-        message: ln.insufficient_payment,
-      });
+      await alert({ title: t('දැනුම්දීම', 'Notice'), message: ln.insufficient_payment });
       return;
     }
     setLiveDateTime();
+    setShowPreview(true);
+  };
+
+  const confirmPrintAndSave = async () => {
+    setPrinting(true);
+    setLiveDateTime();
     const res = await fetch('/api/bills', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ total_amount: grandTotal, total_profit: billItems.reduce((s, i) => s + i.totalProfit, 0), cashier_name: user?.full_name || user?.username, counter_no: user?.counter_no || 'Counter 1', bill_items: billItems }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        total_amount: grandTotal,
+        total_profit: billItems.reduce((s, i) => s + i.totalProfit, 0),
+        cash_paid: cash,
+        change_given: changeDue,
+        cashier_name: user?.full_name || user?.username,
+        cashier_username: user?.username,
+        counter_no: user?.counter_no || 'Counter 1',
+        bill_items: billItems,
+      }),
     });
     const data = await res.json();
-    if (data.status === 'success') { setBillNo(data.bill_no); window.print(); resetBill(true); }
-    else await alert({ title: t('දෝෂය', 'Error'), message: String(data.message) });
+    setPrinting(false);
+    if (data.status !== 'success') {
+      await alert({ title: t('දෝෂය', 'Error'), message: String(data.message) });
+      return;
+    }
+    setBillNo(data.bill_no);
+    setPrintReceipt({
+      billNo: data.bill_no,
+      cashPaid: cash,
+      changeDue,
+      items: [...billItems],
+    });
+    setShowPreview(false);
+    setTimeout(() => {
+      window.print();
+      setPrintReceipt(null);
+      resetAfterSale();
+    }, 150);
   };
 
   const saveProduct = async () => {
@@ -153,9 +239,20 @@ export default function BillingPage() {
     setSavingProduct(false);
     if (data.status === 'success') {
       await alert({ title: t('සාර්ථකයි', 'Success'), message: String(data.message) });
-      setProductsDb((p) => ({ ...p, [data.product.barcode]: { name: data.product.name, market_price: data.product.market_price, our_price: data.product.our_price, cost_price: data.product.cost_price, stock_qty: data.product.stock } }));
+      setProductsDb((p) => ({
+        ...p,
+        [data.product.barcode]: {
+          name: data.product.name,
+          market_price: data.product.market_price,
+          our_price: data.product.our_price,
+          cost_price: data.product.cost_price,
+          stock_qty: data.product.stock,
+        },
+      }));
       setAdminForm({ p_barcode: '', p_name: '', p_market: '0.00', p_our: '0.00', p_stock: '50' });
-    } else await alert({ title: t('දෝෂය', 'Error'), message: String(data.error || data.message) });
+    } else {
+      await alert({ title: t('දෝෂය', 'Error'), message: String(data.error || data.message) });
+    }
   };
 
   const handleEndOfDay = async () => {
@@ -169,6 +266,9 @@ export default function BillingPage() {
     if (res.ok) {
       setEndOfDayReport(await res.json());
       setShowEndOfDayModal(true);
+    } else {
+      const data = await res.json();
+      await alert({ title: t('දෝෂය', 'Error'), message: data.error || 'Failed' });
     }
   };
 
@@ -181,10 +281,31 @@ export default function BillingPage() {
   if (sessionLoading || loading) return <PageLoader />;
 
   return (
-    <div className="billing-print-area">
+    <div>
+      {canBill && user && (
+        <div className="cashier-banner no-print mb-4">
+          <div>
+            <p className="cashier-banner-label label-si">{ln.cashier_label}</p>
+            <p className="cashier-banner-value label-si">{user.full_name}</p>
+          </div>
+          <div>
+            <p className="cashier-banner-label label-si">{ln.counter_label}</p>
+            <p className="cashier-banner-value">{user.counter_no}</p>
+          </div>
+          <div>
+            <p className="cashier-banner-label label-si">{ln.session_no}</p>
+            <p className="cashier-banner-value">#{customerSession}</p>
+          </div>
+          <Button variant="secondary" onClick={startNewCustomer} className="ml-auto">
+            {ln.new_customer}
+          </Button>
+        </div>
+      )}
+
       <div className={`grid gap-4 ${isAdmin ? 'lg:grid-cols-3' : ''}`}>
         {isAdmin && (
           <Card title={ln.add_product} className="no-print lg:sticky lg:top-20 lg:self-start border-t-4 border-t-primary">
+            <Alert type="info" className="mb-4 label-si">{ln.admin_billing_notice}</Alert>
             <div className="space-y-3">
               <Input label={ln.barcode_lbl} value={adminForm.p_barcode} onChange={(e) => setAdminForm({ ...adminForm, p_barcode: e.target.value })} />
               <Input label={ln.p_name} value={adminForm.p_name} onChange={(e) => setAdminForm({ ...adminForm, p_name: e.target.value })} />
@@ -198,115 +319,181 @@ export default function BillingPage() {
           </Card>
         )}
 
-        <Card className={`${isAdmin ? 'lg:col-span-2' : ''} border-t-4 border-t-primary`}>
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-extrabold label-si">{store.store_name}</h2>
-            <p className="text-sm text-slate-600 label-si">{store.address}<br />{store.phone}</p>
-          </div>
-
-          {scanResult && <Alert type={scanResult.includes(ln.added) ? 'success' : 'error'}>{scanResult}</Alert>}
-
-          <div className="no-print grid gap-3 md:grid-cols-[2fr_1fr_auto] mb-4">
-            <Input ref={barcodeRef} label={ln.scan_barcode} value={barcode} onChange={(e) => setBarcode(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); processBilling(); } }} placeholder={ln.scan_placeholder} autoFocus />
-            <Input label={ln.qty} type="number" step="any" value={qty} onChange={(e) => setQty(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); processBilling(); } }} />
-            <div className="flex items-end"><Button size="lg" onClick={processBilling} className="w-full">{ln.add}</Button></div>
-          </div>
-
-          <div className="flex justify-between rounded-lg bg-slate-100 p-3 text-sm mb-3 no-print">
-            <span className="label-si">{ln.bill_no} <strong className={!billNo ? 'text-primary' : ''}>{billNo || ln.auto_bill}</strong></span>
-            <div className="flex items-center gap-2">
-              {billItems.length > 0 && (
-                <Button variant="secondary" className="!py-1.5 !text-xs" onClick={() => setShowItemsModal(true)}>
-                  {t('භාණ්ඩ බලන්න', 'View Items')} ({billItems.length})
-                </Button>
-              )}
-              <div className="text-right label-si"><div>{ln.date} <strong>{billDate}</strong></div><div>{ln.time} <strong>{billTime}</strong></div></div>
+        {canBill && (
+          <Card className="border-t-4 border-t-primary">
+            <div className="text-center mb-4 no-print">
+              <h2 className="text-2xl font-extrabold label-si">{store.store_name}</h2>
+              <p className="text-sm text-slate-600 label-si">{store.address}<br />{store.phone}</p>
             </div>
-          </div>
 
-          <div className="flex justify-between rounded-lg bg-slate-100 p-3 text-sm mb-3 print-only">
-            <span className="label-si">{ln.bill_no} <strong>{billNo || ln.auto_bill}</strong></span>
-            <div className="text-right label-si"><div>{ln.date} <strong>{billDate}</strong></div><div>{ln.time} <strong>{billTime}</strong></div></div>
-          </div>
+            {scanResult && (
+              <Alert type={scanResult.includes(ln.added) ? 'success' : 'error'} className="no-print mb-3">
+                {scanResult}
+              </Alert>
+            )}
 
-          <table className="data-table mb-4">
-            <thead><tr>
-              <th className="label-si">{ln.item_title}</th>
-              <th className="text-right label-si">{ln.market_price}</th>
-              <th className="text-right label-si">{ln.our_price}</th>
-              <th className="text-right label-si">{ln.total_col}</th>
-            </tr></thead>
-            <tbody>
-              {billItems.map((item) => (
-                <tr key={item.barcode}>
-                  <td className="font-bold label-si">{item.qty} x {item.name}</td>
-                  <td className="text-right">{item.marketPrice.toFixed(2)}</td>
-                  <td className="text-right">{item.ourPrice.toFixed(2)}</td>
-                  <td className="text-right font-bold">{item.total.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="print-only space-y-1 text-sm">
-            <div className="flex justify-between label-si"><span>{ln.items}</span><span>{totalQty}</span></div>
-            <div className="flex justify-between font-bold border-t border-dashed pt-1 label-si"><span>{ln.total}</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
-            <div className="flex justify-between text-emerald-700 label-si"><span>{ln.paid}</span><span>Rs. {cash.toFixed(2)}</span></div>
-            <div className="flex justify-between text-red-600 label-si"><span>{ln.change_return}</span><span>Rs. {changeDue.toFixed(2)}</span></div>
-          </div>
-
-          {billItems.length > 0 && (
-          <div className="no-print billing-payment-panel">
-            <h3 className="billing-payment-title label-si">{ln.payment_section}</h3>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="billing-payment-box billing-payment-total">
-                <p className="billing-payment-label label-si">{ln.total}</p>
-                <p className="billing-payment-value">Rs. {grandTotal.toFixed(2)}</p>
-              </div>
-              <div className="billing-payment-box">
+            <div className="no-print space-y-3 mb-4">
+              <Input
+                ref={barcodeRef}
+                label={ln.scan_barcode}
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); processBilling(); } }}
+                placeholder={ln.scan_placeholder}
+                autoFocus
+              />
+              <ProductSearch
+                products={productsDb}
+                onSelect={(code) => addProductToBill(code)}
+              />
+              <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                 <Input
-                  label={ln.customer_paid}
+                  label={ln.qty}
                   type="number"
                   step="any"
-                  min="0"
-                  value={cashPaid}
-                  onChange={(e) => setCashPaid(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); triggerPrint(); } }}
-                  className="!text-2xl !text-center !font-bold"
-                  placeholder="0.00"
+                  value={qty}
+                  onChange={(e) => setQty(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); processBilling(); } }}
                 />
-              </div>
-              <div className={`billing-payment-box billing-payment-change ${amountShort > 0 ? 'billing-payment-short' : ''}`}>
-                <p className="billing-payment-label label-si">
-                  {amountShort > 0 ? ln.amount_due : ln.change_return}
-                </p>
-                <p className="billing-payment-value">
-                  {cashPaid === ''
-                    ? '—'
-                    : amountShort > 0
-                      ? `Rs. ${amountShort.toFixed(2)}`
-                      : `Rs. ${changeDue.toFixed(2)}`}
-                </p>
+                <div className="flex items-end">
+                  <Button size="lg" onClick={processBilling} className="w-full">{ln.add}</Button>
+                </div>
               </div>
             </div>
-            <div className="mt-4 flex gap-3">
-              <Button variant="success" size="lg" className="flex-1" onClick={triggerPrint}>{ln.print}</Button>
-              <Button variant="danger" size="lg" onClick={() => resetBill(false)}>{ln.clear}</Button>
+
+            <div className="flex justify-between rounded-lg bg-slate-100 p-3 text-sm mb-3 no-print">
+              <span className="label-si">
+                {ln.bill_no}{' '}
+                <strong className={!billNo ? 'text-primary' : ''}>{billNo || ln.auto_bill}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                {billItems.length > 0 && (
+                  <Button variant="secondary" className="!py-1.5 !text-xs" onClick={() => setShowItemsModal(true)}>
+                    {t('භාණ්ඩ බලන්න', 'View Items')} ({billItems.length})
+                  </Button>
+                )}
+                <div className="text-right label-si">
+                  <div>{ln.date} <strong>{billDate}</strong></div>
+                  <div>{ln.time} <strong>{billTime}</strong></div>
+                </div>
+              </div>
             </div>
-          </div>
-          )}
 
-          <p className="print-only text-center text-xs mt-3 label-si">{ln.thank_you}<br />Software by: TMsoftware</p>
-        </Card>
+            {billItems.length > 0 ? (
+              <div className="no-print data-table-wrap custom-scrollbar mb-4">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th className="text-left label-si">{ln.item_title}</th>
+                      <th className="text-right label-si">{ln.our_price}</th>
+                      <th className="text-right label-si">{ln.total_col}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billItems.map((item) => (
+                      <tr key={item.barcode}>
+                        <td className="font-bold label-si">{item.qty} x {item.name}</td>
+                        <td className="text-right">{item.ourPrice.toFixed(2)}</td>
+                        <td className="text-right font-bold">{item.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="no-print text-center text-slate-500 py-8 label-si">
+                {t('භාණ්ඩ ස්කෑන් කරන්න හෝ සොයා තෝරන්න', 'Scan or search products to add')}
+              </p>
+            )}
+
+            {billItems.length > 0 && (
+              <div className="no-print billing-payment-panel">
+                <h3 className="billing-payment-title label-si">{ln.payment_section}</h3>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="billing-payment-box billing-payment-total">
+                    <p className="billing-payment-label label-si">{ln.total}</p>
+                    <p className="billing-payment-value">Rs. {grandTotal.toFixed(2)}</p>
+                  </div>
+                  <div className="billing-payment-box">
+                    <Input
+                      label={ln.customer_paid}
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={cashPaid}
+                      onChange={(e) => setCashPaid(e.target.value)}
+                      className="!text-2xl !text-center !font-bold"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className={`billing-payment-box billing-payment-change ${amountShort > 0 ? 'billing-payment-short' : ''}`}>
+                    <p className="billing-payment-label label-si">
+                      {amountShort > 0 ? ln.amount_due : ln.change_return}
+                    </p>
+                    <p className="billing-payment-value">
+                      {cashPaid === ''
+                        ? '—'
+                        : amountShort > 0
+                          ? `Rs. ${amountShort.toFixed(2)}`
+                          : `Rs. ${changeDue.toFixed(2)}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-3">
+                  <Button variant="success" size="lg" className="flex-1" onClick={openPreview}>
+                    {ln.complete_sale}
+                  </Button>
+                  <Button variant="danger" size="lg" onClick={startNewCustomer}>{ln.new_customer}</Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
 
-      <div className="no-print mt-4">
-        <Button variant="warning" className="w-full" onClick={handleEndOfDay}>
-          {ln.end_of_day}
-        </Button>
-      </div>
+      {isAdmin && (
+        <div className="no-print mt-4">
+          <Button variant="warning" className="w-full" onClick={handleEndOfDay}>
+            {ln.end_of_day}
+          </Button>
+        </div>
+      )}
+
+      {/* Hidden print receipt */}
+      {printReceipt && (
+        <div className="billing-print-area print-only">
+          <BillReceipt
+            lang={lang}
+            store={store}
+            billNo={printReceipt.billNo}
+            billDate={billDate}
+            billTime={billTime}
+            cashierName={user?.full_name || user?.username || ''}
+            counterNo={user?.counter_no || ''}
+            items={printReceipt.items}
+            grandTotal={printReceipt.items.reduce((s, i) => s + i.total, 0)}
+            cashPaid={printReceipt.cashPaid}
+            changeDue={printReceipt.changeDue}
+          />
+        </div>
+      )}
+
+      <BillPreviewModal
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        onConfirmPrint={confirmPrintAndSave}
+        printing={printing}
+        store={store}
+        billNo={billNo || ln.auto_bill}
+        billDate={billDate}
+        billTime={billTime}
+        cashierName={user?.full_name || user?.username || ''}
+        counterNo={user?.counter_no || ''}
+        items={billItems}
+        grandTotal={grandTotal}
+        cashPaid={cash}
+        changeDue={changeDue}
+      />
 
       <Modal
         open={showItemsModal}
@@ -323,7 +510,6 @@ export default function BillingPage() {
           <thead>
             <tr>
               <th>{ln.item_title}</th>
-              <th className="text-right">{ln.market_price}</th>
               <th className="text-right">{ln.our_price}</th>
               <th className="text-right">{ln.total_col}</th>
             </tr>
@@ -332,7 +518,6 @@ export default function BillingPage() {
             {billItems.map((item) => (
               <tr key={item.barcode}>
                 <td className="label-si font-bold">{item.qty} x {item.name}</td>
-                <td className="text-right">{item.marketPrice.toFixed(2)}</td>
                 <td className="text-right">{item.ourPrice.toFixed(2)}</td>
                 <td className="text-right font-bold">{item.total.toFixed(2)}</td>
               </tr>

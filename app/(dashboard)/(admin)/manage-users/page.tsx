@@ -2,14 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, Input, Modal, Select } from '@/components/ui';
-import { counterOptions, roleOptions, useLang } from '@/hooks/useLang';
+import { roleOptions, useLang } from '@/hooks/useLang';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
+import { counterOptionsForRole, defaultCounterForRole } from '@/lib/counters';
 
 type User = { username: string; full_name: string; role: string; counter_no: string; password?: string };
 
 export default function ManageUsersPage() {
-  const { user } = useSession(true, true);
+  useSession(true, true);
   const { lang, t } = useLang();
   const { confirm } = useDialog();
   const [users, setUsers] = useState<User[]>([]);
@@ -17,15 +18,23 @@ export default function ManageUsersPage() {
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Cashier');
-  const [counterNo, setCounterNo] = useState('Admin Office');
+  const [counterNo, setCounterNo] = useState('Counter 1');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [editUser, setEditUser] = useState<User | null>(null);
 
   const roles = useMemo(() => roleOptions(lang), [lang]);
-  const counters = useMemo(() => counterOptions(lang), [lang]);
+  const counters = useMemo(() => counterOptionsForRole(lang, role), [lang, role]);
+  const editCounters = useMemo(
+    () => (editUser ? counterOptionsForRole(lang, editUser.role) : []),
+    [lang, editUser]
+  );
 
   useEffect(() => { fetchUsers(); }, []);
+
+  useEffect(() => {
+    setCounterNo(defaultCounterForRole(role));
+  }, [role]);
 
   async function fetchUsers() {
     const res = await fetch('/api/users');
@@ -104,8 +113,22 @@ export default function ManageUsersPage() {
             <Input label={t('නම', 'Name')} value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} />
             <Input label={t('පරිශීලක නාමය', 'Username')} value={editUser.username} onChange={(e) => setEditUser({ ...editUser, username: e.target.value })} />
             <Input label={t('මුරපදය', 'Password')} type="password" value={editUser.password || ''} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} hint={t('හිස්ව තැබුවහොත් පවතින මුරපදය රඳවා ගනී', 'Leave blank to keep current password')} />
-            <Select label={t('භූමිකාව', 'Role')} value={editUser.role} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })} options={roles} />
-            <Select label={t('කවුන්ටරය', 'Counter')} value={editUser.counter_no} onChange={(e) => setEditUser({ ...editUser, counter_no: e.target.value })} options={counters} />
+            <Select
+              label={t('භූමිකාව', 'Role')}
+              value={editUser.role}
+              onChange={(e) => {
+                const newRole = e.target.value;
+                const opts = counterOptionsForRole(lang, newRole);
+                const validCounter = opts.some((o) => o.value === editUser.counter_no);
+                setEditUser({
+                  ...editUser,
+                  role: newRole,
+                  counter_no: validCounter ? editUser.counter_no : defaultCounterForRole(newRole),
+                });
+              }}
+              options={roles}
+            />
+            <Select label={t('කවුන්ටරය', 'Counter')} value={editUser.counter_no} onChange={(e) => setEditUser({ ...editUser, counter_no: e.target.value })} options={editCounters} />
           </div>
         )}
       </Modal>
