@@ -128,3 +128,54 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'Failed to save bill' }, { status: 500 });
   }
 }
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getSessionUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+    const { searchParams } = new URL(request.url);
+    const billNo = String(searchParams.get('bill_no') || '').trim();
+    if (!billNo) {
+      return NextResponse.json({ error: 'bill_no required' }, { status: 400 });
+    }
+
+    const db = await getBillingDb();
+    const order = await db.collection('sales_orders').findOne({ bill_no: billNo });
+    if (!order) {
+      return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
+    }
+    if (String(user.role).toLowerCase() !== 'admin' && String(order.cashier_username) !== user.username) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    let items = Array.isArray(order.bill_items) ? order.bill_items : [];
+    if (!items.length) {
+      const salesItems = await db.collection('sales_items').find({ bill_no: billNo }).toArray();
+      items = salesItems.map((i) => ({
+        barcode: i.barcode,
+        name: i.product_name,
+        qty: Number(i.qty) || 0,
+        ourPrice: Number(i.our_price) || 0,
+        total: Number(i.total) || 0,
+      }));
+    }
+
+    return NextResponse.json({
+      bill: {
+        bill_no: order.bill_no,
+        cashier_name: order.cashier_name,
+        counter_no: order.counter_no,
+        total_amount: Number(order.total_amount) || 0,
+        cash_paid: Number(order.cash_paid) || 0,
+        change_given: Number(order.change_given) || 0,
+        created_at: order.created_at,
+        items,
+      },
+    });
+  } catch (error) {
+    console.error('GET /api/bills error:', error);
+    return NextResponse.json({ error: 'Failed to load bill' }, { status: 500 });
+  }
+}
