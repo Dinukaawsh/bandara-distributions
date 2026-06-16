@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BillPreviewModal } from '@/components/billing/BillPreviewModal';
 import { BillReceipt } from '@/components/billing/BillReceipt';
@@ -53,7 +53,6 @@ export default function BillingPage() {
   const [billDate, setBillDate] = useState('--/--/----');
   const [billTime, setBillTime] = useState('--:--:--');
   const [customerSession, setCustomerSession] = useState(1);
-  const [savingProduct, setSavingProduct] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -66,9 +65,9 @@ export default function BillingPage() {
   } | null>(null);
   const [endOfDayReport, setEndOfDayReport] = useState<EndOfDayReport | null>(null);
   const [showEndOfDayModal, setShowEndOfDayModal] = useState(false);
-  const [adminForm, setAdminForm] = useState({
-    p_barcode: '', p_name: '', p_market: '0.00', p_our: '0.00', p_stock: '50',
-  });
+  const [adminBills, setAdminBills] = useState<Array<Record<string, unknown>>>([]);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
 
   const ln = getTranslations(lang);
   const canBill = !isAdmin;
@@ -85,11 +84,19 @@ export default function BillingPage() {
       const [productsRes, storeRes] = await Promise.all([fetch('/api/products'), fetch('/api/store')]);
       if (productsRes.ok) setProductsDb((await productsRes.json()).products || {});
       if (storeRes.ok) setStore((await storeRes.json()).store);
+      if (isAdmin) {
+        const today = new Date().toISOString().slice(0, 10);
+        const res = await fetch(`/api/sales-report?from=${today}&to=${today}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAdminBills(data.orders || []);
+        }
+      }
       setLoading(false);
       setLiveDateTime();
     }
     loadData();
-  }, [sessionLoading, setLiveDateTime]);
+  }, [sessionLoading, setLiveDateTime, isAdmin]);
 
   const grandTotal = billItems.reduce((s, i) => s + i.total, 0);
   const totalQty = billItems.reduce((s, i) => s + i.qty, 0);
@@ -97,6 +104,21 @@ export default function BillingPage() {
   const balance = cash - grandTotal;
   const changeDue = cashPaid !== '' && balance >= 0 ? balance : 0;
   const amountShort = cashPaid !== '' && balance < 0 ? Math.abs(balance) : 0;
+  const productEntries = useMemo(
+    () =>
+      Object.entries(productsDb).map(([barcodeKey, p]) => ({
+        barcode: barcodeKey,
+        name: p.name,
+        our_price: Number(p.our_price) || 0,
+        stock_qty: Number(p.stock_qty) || 0,
+      })),
+    [productsDb]
+  );
+  const filteredCatalog = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    if (!q) return productEntries;
+    return productEntries.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q));
+  }, [catalogSearch, productEntries]);
 
   const addProductToBill = useCallback((code: string, quantity = parseFloat(qty) || 1) => {
     const trimmed = code.trim();
@@ -228,33 +250,6 @@ export default function BillingPage() {
     }, 150);
   };
 
-  const saveProduct = async () => {
-    if (!adminForm.p_barcode.trim() || !adminForm.p_name.trim()) {
-      await alert({ title: t('දැනුම්දීම', 'Notice'), message: ln.barcode_name_required });
-      return;
-    }
-    setSavingProduct(true);
-    const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(adminForm) });
-    const data = await res.json();
-    setSavingProduct(false);
-    if (data.status === 'success') {
-      await alert({ title: t('සාර්ථකයි', 'Success'), message: String(data.message) });
-      setProductsDb((p) => ({
-        ...p,
-        [data.product.barcode]: {
-          name: data.product.name,
-          market_price: data.product.market_price,
-          our_price: data.product.our_price,
-          cost_price: data.product.cost_price,
-          stock_qty: data.product.stock,
-        },
-      }));
-      setAdminForm({ p_barcode: '', p_name: '', p_market: '0.00', p_our: '0.00', p_stock: '50' });
-    } else {
-      await alert({ title: t('දෝෂය', 'Error'), message: String(data.error || data.message) });
-    }
-  };
-
   const handleEndOfDay = async () => {
     const ok = await confirm({
       title: ln.end_of_day,
@@ -305,34 +300,36 @@ export default function BillingPage() {
             </div>
           </div>
           <div className="cashier-banner-actions">
-            <Button
-              variant={user.availability_status === 'busy' ? 'success' : 'secondary'}
-              className="w-full sm:w-auto"
-              onClick={async () => {
-                const res = await fetch('/api/users/status', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ status: 'available' }),
-                });
-                if (res.ok) window.location.reload();
-              }}
-            >
-              {ln.set_available}
-            </Button>
-            <Button
-              variant={user.availability_status === 'busy' ? 'secondary' : 'warning'}
-              className="w-full sm:w-auto"
-              onClick={async () => {
-                const res = await fetch('/api/users/status', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ status: 'busy' }),
-                });
-                if (res.ok) window.location.reload();
-              }}
-            >
-              {ln.set_busy}
-            </Button>
+            <label className="flex items-center gap-3 rounded-full bg-white/80 px-3 py-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                {user.availability_status === 'busy' ? t('කාර්යබහුල', 'Busy') : t('සක්‍රිය', 'Active')}
+              </span>
+              <button
+                type="button"
+                disabled={statusSaving}
+                onClick={async () => {
+                  setStatusSaving(true);
+                  const nextStatus = user.availability_status === 'busy' ? 'available' : 'busy';
+                  const res = await fetch('/api/users/status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: nextStatus }),
+                  });
+                  setStatusSaving(false);
+                  if (res.ok) window.location.reload();
+                }}
+                className={`relative h-7 w-14 rounded-full transition ${
+                  user.availability_status === 'busy' ? 'bg-slate-400' : 'bg-emerald-500'
+                } ${statusSaving ? 'opacity-70' : ''}`}
+                aria-label="Toggle availability"
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${
+                    user.availability_status === 'busy' ? 'left-1' : 'left-8'
+                  }`}
+                />
+              </button>
+            </label>
             <Button variant="secondary" onClick={startNewCustomer} className="w-full sm:w-auto">
               {ln.new_customer}
             </Button>
@@ -340,23 +337,7 @@ export default function BillingPage() {
         </div>
       )}
 
-      <div className={`grid gap-4 ${isAdmin ? 'lg:grid-cols-3' : ''}`}>
-        {isAdmin && (
-          <Card title={ln.add_product} className="no-print lg:sticky lg:top-20 lg:self-start border-t-4 border-t-primary">
-            <Alert type="info" className="mb-4 label-si">{ln.admin_billing_notice}</Alert>
-            <div className="space-y-3">
-              <Input label={ln.barcode_lbl} value={adminForm.p_barcode} onChange={(e) => setAdminForm({ ...adminForm, p_barcode: e.target.value })} />
-              <Input label={ln.p_name} value={adminForm.p_name} onChange={(e) => setAdminForm({ ...adminForm, p_name: e.target.value })} />
-              <div className="grid grid-cols-2 gap-2">
-                <Input label={ln.market_price_lbl} type="number" step="any" value={adminForm.p_market} onChange={(e) => setAdminForm({ ...adminForm, p_market: e.target.value })} />
-                <Input label={ln.our_price_lbl} type="number" step="any" value={adminForm.p_our} onChange={(e) => setAdminForm({ ...adminForm, p_our: e.target.value })} />
-              </div>
-              <Input label={ln.stock_qty} type="number" value={adminForm.p_stock} onChange={(e) => setAdminForm({ ...adminForm, p_stock: e.target.value })} />
-              <Button onClick={saveProduct} loading={savingProduct} className="w-full">{ln.save_btn}</Button>
-            </div>
-          </Card>
-        )}
-
+      <div className={`grid gap-4 ${isAdmin ? 'lg:grid-cols-3' : canBill ? 'lg:grid-cols-[minmax(0,1fr)_320px]' : ''}`}>
         {canBill && (
           <Card className="border-t-4 border-t-primary">
             <div className="text-center mb-4 no-print">
@@ -488,8 +469,40 @@ export default function BillingPage() {
           </Card>
         )}
 
+        {canBill && (
+          <Card className="no-print lg:sticky lg:top-20 lg:self-start">
+            <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-600 label-si">
+              {t('ලබා ගත හැකි භාණ්ඩ', 'Available Items')}
+            </h3>
+            <Input
+              label={t('භාණ්ඩ සොයන්න', 'Search items')}
+              value={catalogSearch}
+              onChange={(e) => setCatalogSearch(e.target.value)}
+              placeholder={t('නම හෝ බාර්කෝඩ්', 'Name or barcode')}
+            />
+            <div className="mt-3 max-h-[520px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
+              {filteredCatalog.slice(0, 200).map((item) => (
+                <button
+                  key={item.barcode}
+                  type="button"
+                  onClick={() => addProductToBill(item.barcode)}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left hover:border-primary hover:bg-primary/5"
+                >
+                  <p className="text-sm font-semibold label-si">{item.name}</p>
+                  <p className="text-xs text-slate-500">
+                    {item.barcode} · {t('රුපියල්', 'LKR')} {item.our_price.toFixed(2)} · {t('තොගය', 'Stock')} {item.stock_qty}
+                  </p>
+                </button>
+              ))}
+              {filteredCatalog.length === 0 && (
+                <p className="py-6 text-center text-sm text-slate-500 label-si">{t('භාණ්ඩ හමු නොවීය', 'No items found')}</p>
+              )}
+            </div>
+          </Card>
+        )}
+
         {!canBill && (
-          <Card className="border-t-4 border-t-primary">
+          <Card className="border-t-4 border-t-primary lg:col-span-3">
             <div className="text-center mb-4">
               <h2 className="text-2xl font-extrabold label-si">{store.store_name}</h2>
               <p className="text-sm text-slate-600 label-si">{store.address}<br />{store.phone}</p>
@@ -525,6 +538,40 @@ export default function BillingPage() {
                 <Button variant="secondary" onClick={() => router.push('/sales-report')}>
                   {t('විකුණුම් වාර්තාවට යන්න', 'Go to Sales Report')}
                 </Button>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-600 label-si">
+                {t('අද දින සියලු කැෂියර් බිල්පත්', 'All Cashier Bills Today')}
+              </h3>
+              <div className="data-table-wrap custom-scrollbar">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('බිල් අංකය', 'Bill No')}</th>
+                      <th>{t('කැෂියර්', 'Cashier')}</th>
+                      <th>{t('කවුන්ටරය', 'Counter')}</th>
+                      <th className="text-right">{t('මුදල', 'Amount')}</th>
+                      <th>{t('වේලාව', 'Time')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminBills.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-6 text-slate-500 label-si">{t('අද බිල්පත් නොමැත', 'No bills today')}</td>
+                      </tr>
+                    ) : adminBills.map((o) => (
+                      <tr key={String(o.bill_no)}>
+                        <td>{String(o.bill_no)}</td>
+                        <td className="label-si">{String(o.cashier_name)}</td>
+                        <td>{String(o.counter_no)}</td>
+                        <td className="text-right">LKR {Number(o.total_amount || 0).toFixed(2)}</td>
+                        <td>{new Date(String(o.created_at)).toLocaleTimeString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </Card>

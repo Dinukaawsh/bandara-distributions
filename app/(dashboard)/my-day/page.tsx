@@ -21,7 +21,7 @@ type MyDayData = {
 export default function MyDayPage() {
   const router = useRouter();
   const { user, loading } = useSession();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [data, setData] = useState<MyDayData | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -39,15 +39,17 @@ export default function MyDayPage() {
       .finally(() => setPageLoading(false));
   }, [loading, user, router]);
 
+  const moneyLabel = lang === 'si' ? '??????? (LKR)' : 'LKR';
+
   if (loading || pageLoading) return <PageLoader />;
-  if (!data) return <Alert type="error">{t('?? ???? ?????', 'No daily data available')}</Alert>;
+  if (!data) return <Alert type="error">{t('?? ??? ???? ?????', 'No daily data available')}</Alert>;
 
   return (
     <div className="space-y-5">
       <div className="page-header">
-        <h1 className="page-title label-si">{t('??? ?? ????????', 'My Daily Sales')}</h1>
+        <h1 className="page-title label-si">{t('??? ?? ??? ????????', 'My Daily Sales')}</h1>
         <p className="page-subtitle label-si">
-          {t('?? ??? ???? ????? - ??????? ?????????', 'Today only - no history shown')}
+          {t('?? ??? ??????? ???? - ??????? ?????????', 'Today only - no history shown')}
         </p>
       </div>
 
@@ -59,11 +61,11 @@ export default function MyDayPage() {
         </Card>
         <Card className="dashboard-metric-card">
           <p className="dashboard-metric-label">{t('?? ????????', 'Today Sales')}</p>
-          <p className="dashboard-metric-value">LKR {data.stats.total_sales.toFixed(2)}</p>
+          <p className="dashboard-metric-value">{moneyLabel} {data.stats.total_sales.toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
           <p className="dashboard-metric-label">{t('?? ????', 'Today Profit')}</p>
-          <p className="dashboard-metric-value">LKR {data.stats.total_profit.toFixed(2)}</p>
+          <p className="dashboard-metric-value">{moneyLabel} {data.stats.total_profit.toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
           <p className="dashboard-metric-label">{t('?? ???????', 'Today Bills')}</p>
@@ -92,8 +94,8 @@ export default function MyDayPage() {
               ) : data.orders.map((o) => (
                 <tr key={o.bill_no}>
                   <td>{o.bill_no}</td>
-                  <td className="text-right">LKR {Number(o.total_amount).toFixed(2)}</td>
-                  <td className="text-right">LKR {Number(o.total_profit).toFixed(2)}</td>
+                  <td className="text-right">{moneyLabel} {Number(o.total_amount).toFixed(2)}</td>
+                  <td className="text-right">{moneyLabel} {Number(o.total_profit).toFixed(2)}</td>
                   <td>{new Date(o.created_at).toLocaleTimeString()}</td>
                 </tr>
               ))}
@@ -104,4 +106,3 @@ export default function MyDayPage() {
     </div>
   );
 }
-

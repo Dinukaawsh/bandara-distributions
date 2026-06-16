@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { Alert, Button, Card, Input, Select } from '@/components/ui';
 import { counterOptions, useLang } from '@/hooks/useLang';
 import { useSession } from '@/hooks/useSession';
+import { isAdminRole } from '@/lib/counters';
 
 export default function ProfilePage() {
-  useSession();
+  const { user } = useSession();
   const { t, lang } = useLang();
   const [loginUsername, setLoginUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -51,14 +52,14 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="mx-auto w-full max-w-xl space-y-6">
       <div className="page-header">
         <h1 className="page-title label-si">{t('මගේ ගිණුම', 'My Profile')}</h1>
         <p className="page-subtitle label-si">
           {t('බිල්පතේ පෙනෙන නම සහ කවුන්ටරය යාවත්කාලීන කරන්න.', 'Update your invoice name and counter.')}
         </p>
       </div>
-      <Card>
+      <Card className="mx-auto w-full">
         {message && <Alert type="success" className="mb-4">{message}</Alert>}
         {error && <Alert type="error" className="mb-4">{error}</Alert>}
         <form className="space-y-3" onSubmit={handleSubmit}>
@@ -80,7 +81,13 @@ export default function ProfilePage() {
             value={counterNo}
             onChange={(e) => setCounterNo(e.target.value)}
             options={counters}
+            disabled={!isAdminRole(user?.role || '')}
           />
+          {!isAdminRole(user?.role || '') && (
+            <p className="text-xs text-slate-500 label-si">
+              {t('කැෂියර් කවුන්ටරය වෙනස් කළ හැක්කේ පරිපාලකයාට පමණි.', 'Only Admin can change cashier counter assignment.')}
+            </p>
+          )}
           <Button type="submit" className="w-full">{t('යාවත්කාලීන කරන්න', 'Update Profile')}</Button>
         </form>
         <p className="mt-4 text-sm text-slate-500 label-si">

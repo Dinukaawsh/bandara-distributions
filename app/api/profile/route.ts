@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSessionCookie, getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
+import { isAdminRole } from '@/lib/counters';
 
 export async function GET() {
   try {
@@ -40,7 +41,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const newUsername = String(body.username || '').trim();
     const full_name = String(body.full_name || body.username || '').trim();
-    const counter_no = String(body.counter_no || user.counter_no);
+    const requestedCounter = String(body.counter_no || user.counter_no);
+    const counter_no = isAdminRole(user.role) ? requestedCounter : user.counter_no;
 
     if (!newUsername) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });

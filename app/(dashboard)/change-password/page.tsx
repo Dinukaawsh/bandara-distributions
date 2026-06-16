@@ -29,7 +29,7 @@ export default function ChangePasswordPage() {
   }, [isAdmin]);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="mx-auto w-full max-w-2xl space-y-6">
       <div className="page-header">
         <h1 className="page-title label-si">{t('මුරපදය වෙනස් කිරීම', 'Change Password')}</h1>
         <p className="page-subtitle label-si">
@@ -39,7 +39,7 @@ export default function ChangePasswordPage() {
       {message && <Alert type="success">{message}</Alert>}
       {error && <Alert type="error">{error}</Alert>}
 
-      <Card title={t('මගේ මුරපදය', 'My Password')}>
+      <Card title={t('මගේ මුරපදය', 'My Password')} className="mx-auto w-full max-w-xl">
         <form
           className="space-y-3"
           onSubmit={async (e) => {
@@ -93,7 +93,7 @@ export default function ChangePasswordPage() {
       </Card>
 
       {isAdmin && (
-        <Card title={t('පරිශීලක මුරපදය නැවත සකසන්න', 'Reset User Password')}>
+        <Card title={t('පරිශීලක මුරපදය නැවත සකසන්න', 'Reset User Password')} className="mx-auto w-full">
           <form
             className="grid gap-3 md:grid-cols-[2fr_2fr_1fr]"
             onSubmit={async (e) => {

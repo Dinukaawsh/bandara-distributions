@@ -16,14 +16,17 @@ export default function ManageStorePage() {
   }, []);
 
   return (
-    <div className="max-w-xl">
-      <h1 className="mb-4 text-2xl font-extrabold label-si">{t('ආයතන විස්තර', 'Store Details')}</h1>
-      <Card>
+    <div className="mx-auto w-full max-w-2xl">
+      <h1 className="mb-4 text-center text-2xl font-extrabold label-si">{t('ආයතන විස්තර', 'Store Details')}</h1>
+      <Card className="mx-auto max-w-xl">
         {message && <Alert type="success" className="mb-4">{message}</Alert>}
         <form className="space-y-3" onSubmit={async (e) => {
           e.preventDefault();
           const res = await fetch('/api/store', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(store) });
-          if (res.ok) setMessage(t('සාර්ථකව යාවත්කාලීන විය!', 'Updated successfully!'));
+          if (res.ok) {
+            setMessage(t('සාර්ථකව යාවත්කාලීන විය!', 'Updated successfully!'));
+            window.dispatchEvent(new Event('store-updated'));
+          }
         }}>
           <Input label={t('ආයතනයේ නම', 'Store Name')} value={store.store_name} onChange={(e) => setStore({ ...store, store_name: e.target.value })} required />
           <Input label={t('ලිපිනය', 'Address')} value={store.address} onChange={(e) => setStore({ ...store, address: e.target.value })} required />

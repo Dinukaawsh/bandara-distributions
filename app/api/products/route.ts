@@ -73,28 +73,11 @@ export async function POST(request: NextRequest) {
     const db = await getBillingDb();
     const products = db.collection('products');
     const existing = await products.findOne({ barcode });
-
     if (existing) {
-      await products.updateOne(
-        { barcode },
-        {
-          $set: { name, market_price, our_price, cost_price },
-          $inc: { stock },
-        }
+      return NextResponse.json(
+        { error: 'මෙම බාර්කෝඩ් අංකය දැනටමත් භාවිතාවේ පවතී. Barcode must be unique.' },
+        { status: 409 }
       );
-      const updated = await products.findOne({ barcode });
-      return NextResponse.json({
-        status: 'success',
-        message: 'භාණ්ඩය දැනටමත් පවතින බැවින් තොගය සහ මිල ගණන් යාවත්කාලීන කරන ලදී!',
-        product: {
-          barcode,
-          name,
-          market_price,
-          our_price,
-          cost_price,
-          stock: updated?.stock ?? stock,
-        },
-      });
     }
 
     await products.insertOne({

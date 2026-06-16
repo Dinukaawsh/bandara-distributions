@@ -12,7 +12,7 @@ type SearchBarProps = {
 export function SearchBar({ value, onChange, placeholder = 'සොයන්න...', className = '' }: SearchBarProps) {
   return (
     <div className={`relative ${className}`}>
-      <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400">
+      <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400">
         <HiOutlineMagnifyingGlass className="h-4 w-4" />
       </span>
       <input
@@ -20,7 +20,7 @@ export function SearchBar({ value, onChange, placeholder = 'සොයන්න..
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="form-input h-11 pl-10 pr-3 leading-none"
+        className="form-input h-11 pl-12 pr-3"
       />
     </div>
   );
