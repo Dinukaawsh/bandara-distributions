@@ -23,7 +23,7 @@ type User = {
 
 function StatusBadge({ status, t }: { status?: string; t: (si: string, en: string) => string }) {
   const busy = status === 'busy';
-  return <span className={busy ? 'badge-warning' : 'badge-stock'}>{busy ? t('?????????', 'Busy') : t('??? ?? ???', 'Available')}</span>;
+  return <span className={busy ? 'badge-warning' : 'badge-stock'}>{busy ? t('', '') : t('', '')}</span>;
 }
 
 function UserTable({
@@ -39,18 +39,18 @@ function UserTable({
   onDelete: (u: User) => void;
   showStatus?: boolean;
 }) {
-  if (users.length === 0) return <p className="py-6 text-center text-sm text-slate-500 label-si">{t('??????????? ???', 'No users')}</p>;
+  if (users.length === 0) return <p className="py-6 text-center text-sm text-slate-500 label-si">{t('', '')}</p>;
 
   return (
     <div className="data-table-wrap custom-scrollbar">
       <table className="data-table">
         <thead>
           <tr>
-            <th className="text-left label-si">{t('??', 'Name')}</th>
-            <th className="text-left">{t('??????? ????', 'Username')}</th>
-            <th className="text-left">{t('????????', 'Counter')}</th>
-            {showStatus && <th className="text-center">{t('?????', 'Status')}</th>}
-            <th className="text-center">{t('???????', 'Action')}</th>
+            <th className="text-left label-si">{t('', '')}</th>
+            <th className="text-left">{t('', '')}</th>
+            <th className="text-left">{t('', '')}</th>
+            {showStatus && <th className="text-center">{t('', '')}</th>}
+            <th className="text-center">{t('', '')}</th>
           </tr>
         </thead>
         <tbody>
@@ -63,11 +63,11 @@ function UserTable({
               <td className="cell-actions">
                 <div className="cell-actions-inner">
                   {u.username.toLowerCase() === 'admin' ? (
-                    <span className="text-slate-400 text-xs label-si">{t('???????', 'Protected')}</span>
+                    <span className="text-slate-400 text-xs label-si">{t('', '')}</span>
                   ) : (
                     <>
-                      <Button variant="warning" className="!py-1 !text-xs" onClick={() => onEdit(u)}>{t('????????', 'Edit')}</Button>
-                      <Button variant="danger" className="!py-1 !text-xs" onClick={() => onDelete(u)}>{t('?????', 'Delete')}</Button>
+                      <Button variant="warning" className="!py-1 !text-xs" onClick={() => onEdit(u)}>{t('', '')}</Button>
+                      <Button variant="danger" className="!py-1 !text-xs" onClick={() => onDelete(u)}>{t('', '')}</Button>
                     </>
                   )}
                 </div>
@@ -114,10 +114,10 @@ export default function ManageUsersPage() {
   }
 
   async function handleDelete(u: User) {
-    const ok = await confirm({ title: t('????????? ?????', 'Delete User'), message: t('??? ???????', 'Delete?') });
+    const ok = await confirm({ title: t('', ''), message: t('', '') });
     if (!ok) return;
     await fetch(`/api/users?username=${encodeURIComponent(u.username)}`, { method: 'DELETE' });
-    setMessage(t('??? ??? ???!', 'Deleted!'));
+    setMessage(t('', ''));
     fetchUsers();
   }
 
@@ -126,26 +126,26 @@ export default function ManageUsersPage() {
       <div className="page-header">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="page-title label-si">{t('??????? ?????????', 'User Accounts')}</h1>
-            <p className="page-subtitle label-si">{t('??????????? ?? ?????????? ???? ?? ????????? ?????.', 'Manage administrators and cashiers separately.')}</p>
+            <h1 className="page-title label-si">{t('', '')}</h1>
+            <p className="page-subtitle label-si">{t('', '')}</p>
           </div>
-          <Button onClick={() => setShowCreate(true)}>{t('?? ?????????', 'Create User')}</Button>
+          <Button onClick={() => setShowCreate(true)}>{t('', '')}</Button>
         </div>
       </div>
 
       {message && <Alert type="success">{message}</Alert>}
       {error && <Alert type="error">{error}</Alert>}
 
-      <Card title={t('???????????', 'Administrators')} className="overflow-hidden p-0 sm:p-0">
+      <Card title={t('', '')} className="overflow-hidden p-0 sm:p-0">
         <UserTable users={admins} t={t} onEdit={setEditUser} onDelete={handleDelete} />
       </Card>
 
-      <Card title={t('??????????', 'Cashiers')} className="overflow-hidden p-0 sm:p-0">
+      <Card title={t('', '')} className="overflow-hidden p-0 sm:p-0">
         <UserTable users={cashiers} t={t} showStatus onEdit={setEditUser} onDelete={handleDelete} />
       </Card>
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('?? ?????????', 'Add New User')} footerSplit footer={<>
-        <Button variant="secondary" className="w-full" onClick={() => setShowCreate(false)}>{t('?????', 'Close')}</Button>
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('', '')} footerSplit footer={<>
+        <Button variant="secondary" className="w-full" onClick={() => setShowCreate(false)}>{t('', '')}</Button>
         <Button className="w-full" onClick={async () => {
           setMessage(''); setError('');
           const res = await fetch('/api/users', {
@@ -155,24 +155,24 @@ export default function ManageUsersPage() {
           });
           const data = await res.json();
           if (!res.ok) { setError(data.error); return; }
-          setMessage(t('????? ???? ???!', 'Account created!'));
+          setMessage(t('', ''));
           setUsername(''); setFullName(''); setPassword('');
           setShowCreate(false);
           fetchUsers();
-        }}>{t('????? ??????', 'Create Account')}</Button>
+        }}>{t('', '')}</Button>
       </>}>
         <div className="space-y-3">
-          <Input label={t('??', 'Full Name')} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-          <Input label={t('??????? ????', 'Username')} value={username} onChange={(e) => setUsername(e.target.value)} required />
-          <Input label={t('??????', 'Password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <Select label={t('???????', 'Role')} value={role} onChange={(e) => setRole(e.target.value)} options={roles} />
-          <Select label={t('????????', 'Counter')} value={counterNo} onChange={(e) => setCounterNo(e.target.value)} options={counters} />
-          {role.toLowerCase() === 'admin' && <p className="text-xs text-slate-500 label-si">{t('Admin ???? Admin Office ????.', 'Admin role uses Admin Office only.')}</p>}
+          <Input label={t('', '')} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+          <Input label={t('', '')} value={username} onChange={(e) => setUsername(e.target.value)} required />
+          <Input label={t('', '')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Select label={t('', '')} value={role} onChange={(e) => setRole(e.target.value)} options={roles} />
+          <Select label={t('', '')} value={counterNo} onChange={(e) => setCounterNo(e.target.value)} options={counters} />
+          {role.toLowerCase() === 'admin' && <p className="text-xs text-slate-500 label-si">{t('', '')}</p>}
         </div>
       </Modal>
 
-      <Modal open={!!editUser} onClose={() => setEditUser(null)} title={t('????????? ????????', 'Edit User')} footerSplit footer={<>
-        <Button variant="secondary" className="w-full" onClick={() => setEditUser(null)}>{t('?????', 'Close')}</Button>
+      <Modal open={!!editUser} onClose={() => setEditUser(null)} title={t('', '')} footerSplit footer={<>
+        <Button variant="secondary" className="w-full" onClick={() => setEditUser(null)}>{t('', '')}</Button>
         <Button className="w-full" onClick={async () => {
           if (!editUser) return;
           setError('');
@@ -191,17 +191,17 @@ export default function ManageUsersPage() {
           const data = await res.json();
           if (!res.ok) { setError(data.error); return; }
           setEditUser(null);
-          setMessage(t('?????????? ???!', 'Updated!'));
+          setMessage(t('', ''));
           fetchUsers();
-        }}>{t('???? ?????', 'Save')}</Button>
+        }}>{t('', '')}</Button>
       </>}>
         {editUser && (
           <div className="space-y-3">
-            <Input label={t('??', 'Name')} value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} />
-            <Input label={t('??????? ????', 'Username')} value={editUser.username} onChange={(e) => setEditUser({ ...editUser, username: e.target.value })} />
-            <Input label={t('??????', 'Password')} type="password" value={editUser.password || ''} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} hint={t('????? ????????? ????? ?????? ???? ???', 'Leave blank to keep current password')} />
+            <Input label={t('', '')} value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} />
+            <Input label={t('', '')} value={editUser.username} onChange={(e) => setEditUser({ ...editUser, username: e.target.value })} />
+            <Input label={t('', '')} type="password" value={editUser.password || ''} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} hint={t('', '')} />
             <Select
-              label={t('???????', 'Role')}
+              label={t('', '')}
               value={editUser.role}
               onChange={(e) => {
                 const newRole = e.target.value;
@@ -211,10 +211,11 @@ export default function ManageUsersPage() {
               }}
               options={roles}
             />
-            <Select label={t('????????', 'Counter')} value={editUser.counter_no} onChange={(e) => setEditUser({ ...editUser, counter_no: e.target.value })} options={editCounters} />
+            <Select label={t('', '')} value={editUser.counter_no} onChange={(e) => setEditUser({ ...editUser, counter_no: e.target.value })} options={editCounters} />
           </div>
         )}
       </Modal>
     </div>
   );
 }
+

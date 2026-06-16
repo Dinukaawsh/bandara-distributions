@@ -46,10 +46,29 @@ export async function GET() {
     }
 
     const counterMap: Record<string, number> = {};
+    const cashierSalesMap: Record<string, number> = {};
+    const itemQtyMap: Record<string, { name: string; qty: number }> = {};
     for (const o of todayOrders) {
       const c = String(o.counter_no || 'Unknown');
       counterMap[c] = (counterMap[c] || 0) + (Number(o.total_amount) || 0);
+      const cashierName = String(o.cashier_name || o.cashier_username || 'Unknown');
+      cashierSalesMap[cashierName] = (cashierSalesMap[cashierName] || 0) + (Number(o.total_amount) || 0);
+      const items = Array.isArray(o.bill_items) ? o.bill_items : [];
+      for (const item of items) {
+        const barcode = String(item?.barcode || '');
+        const name = String(item?.name || barcode || 'Unknown');
+        const qty = Number(item?.qty) || 0;
+        if (!barcode) continue;
+        if (!itemQtyMap[barcode]) itemQtyMap[barcode] = { name, qty: 0 };
+        itemQtyMap[barcode].qty += qty;
+      }
     }
+    const topCashier = Object.entries(cashierSalesMap)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)[0] || null;
+    const topItem = Object.entries(itemQtyMap)
+      .map(([barcode, row]) => ({ barcode, name: row.name, qty: row.qty }))
+      .sort((a, b) => b.qty - a.qty)[0] || null;
 
     const cashiers = users.filter((u) => String(u.role || '').toLowerCase() !== 'admin');
     const availableCashiers = cashiers.filter((u) => u.availability_status !== 'busy').length;
@@ -75,6 +94,10 @@ export async function GET() {
         counter_no: c.counter_no,
         availability_status: c.availability_status === 'busy' ? 'busy' : 'available',
       })),
+      today_highlights: {
+        top_cashier: topCashier,
+        top_item: topItem,
+      },
     });
   } catch (error) {
     console.error('GET /api/dashboard/overview error:', error);

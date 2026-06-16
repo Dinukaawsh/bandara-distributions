@@ -119,6 +119,33 @@ export default function BillingPage() {
     if (!q) return productEntries;
     return productEntries.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q));
   }, [catalogSearch, productEntries]);
+  const topCashierToday = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const o of adminBills) {
+      const name = String(o.cashier_name || o.cashier_username || 'Unknown');
+      map[name] = (map[name] || 0) + (Number(o.total_amount) || 0);
+    }
+    return Object.entries(map)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)[0] || null;
+  }, [adminBills]);
+  const topItemToday = useMemo(() => {
+    const map: Record<string, { name: string; qty: number }> = {};
+    for (const o of adminBills) {
+      const items = Array.isArray(o.bill_items) ? o.bill_items : [];
+      for (const item of items as Array<Record<string, unknown>>) {
+        const key = String(item.barcode || '');
+        if (!key) continue;
+        const name = String(item.name || key);
+        const qty = Number(item.qty || 0);
+        if (!map[key]) map[key] = { name, qty: 0 };
+        map[key].qty += qty;
+      }
+    }
+    return Object.entries(map)
+      .map(([barcodeKey, row]) => ({ barcode: barcodeKey, name: row.name, qty: row.qty }))
+      .sort((a, b) => b.qty - a.qty)[0] || null;
+  }, [adminBills]);
 
   const addProductToBill = useCallback((code: string, quantity = parseFloat(qty) || 1) => {
     const trimmed = code.trim();
@@ -524,6 +551,19 @@ export default function BillingPage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('වේලාව', 'Time')}</p>
                 <p className="text-lg font-extrabold text-slate-800">{billTime}</p>
+              </div>
+            </div>
+
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('අද වැඩිපුර විකුණුම් කළ කැෂියර්', 'Top Cashier Today')}</p>
+                <p className="mt-1 text-lg font-bold label-si">{topCashierToday?.name || t('දත්ත නොමැත', 'No data')}</p>
+                {topCashierToday && <p className="text-sm text-slate-600">LKR {topCashierToday.amount.toFixed(2)}</p>}
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('අද වැඩිපුර විකිණුණු භාණ්ඩය', 'Top Item Today')}</p>
+                <p className="mt-1 text-lg font-bold label-si">{topItemToday?.name || t('දත්ත නොමැත', 'No data')}</p>
+                {topItemToday && <p className="text-sm text-slate-600">{topItemToday.barcode} · {topItemToday.qty} {t('ප්‍රමාණය', 'qty')}</p>}
               </div>
             </div>
 

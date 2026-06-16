@@ -20,6 +20,10 @@ type DashboardData = {
   sales_by_day: Array<{ date: string; sales: number; profit: number }>;
   counter_sales_today: Array<{ counter_no: string; amount: number }>;
   cashier_statuses: Array<{ full_name: string; counter_no: string; availability_status: 'available' | 'busy' }>;
+  today_highlights?: {
+    top_cashier?: { name: string; amount: number } | null;
+    top_item?: { barcode: string; name: string; qty: number } | null;
+  };
 };
 
 export default function AdminDashboardPage() {
@@ -74,6 +78,32 @@ export default function AdminDashboardPage() {
         <Card className="dashboard-metric-card">
           <p className="dashboard-metric-label">{t('ලබා ගත හැකි කැෂියර්', 'Available Cashiers')}</p>
           <p className="dashboard-metric-value">{data.stats.cashiers_available} / {data.stats.cashiers_total}</p>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card className="dashboard-metric-card">
+          <p className="dashboard-metric-label">{t('අද වැඩිපුර විකුණුම් කළ කැෂියර්', 'Top Cashier Today')}</p>
+          {data.today_highlights?.top_cashier ? (
+            <>
+              <p className="text-lg font-bold label-si">{data.today_highlights.top_cashier.name}</p>
+              <p className="dashboard-metric-value">LKR {Number(data.today_highlights.top_cashier.amount).toFixed(2)}</p>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 label-si">{t('දත්ත නොමැත', 'No data')}</p>
+          )}
+        </Card>
+        <Card className="dashboard-metric-card">
+          <p className="dashboard-metric-label">{t('අද වැඩිපුර විකිණුණු භාණ්ඩය', 'Top Selling Item Today')}</p>
+          {data.today_highlights?.top_item ? (
+            <>
+              <p className="text-lg font-bold label-si">{data.today_highlights.top_item.name}</p>
+              <p className="text-sm text-slate-500">{data.today_highlights.top_item.barcode}</p>
+              <p className="dashboard-metric-value">{data.today_highlights.top_item.qty}</p>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 label-si">{t('දත්ත නොමැත', 'No data')}</p>
+          )}
         </Card>
       </div>
 

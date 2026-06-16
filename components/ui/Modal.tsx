@@ -18,14 +18,14 @@ export function Modal({ open, onClose, title, children, footer, footerSplit = fa
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className={`modal-panel ${sizeClass}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-panel ${sizeClass} overflow-visible`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h3 className="text-lg font-bold text-black label-si">{title}</h3>
           <button type="button" onClick={onClose} className="text-slate-500 hover:text-black" aria-label="Close">
             ✕
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-auto p-5 custom-scrollbar">{children}</div>
+        <div className="max-h-[70vh] overflow-visible p-5">{children}</div>
         {footer && (
           <div className={`border-t border-border px-5 py-4 ${footerSplit ? 'modal-footer-split' : 'flex justify-end gap-2'}`}>
             {footer}

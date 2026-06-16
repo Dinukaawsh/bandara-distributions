@@ -100,7 +100,7 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
           <p className="sidebar-section-label label-si">
             {lang === 'si' ? 'ගිණුම' : 'Account'}
           </p>
-          {userNav.map((item) => {
+          {userNav.filter((item) => !(isAdmin && item.href === '/my-day')).map((item) => {
             const active = pathname === item.href;
             return (
               <Link
