@@ -485,6 +485,59 @@ body {
   @apply flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2;
 }
 
+/* Dashboard charts */
+.dashboard-chart-wrap {
+  @apply w-full;
+}
+.dashboard-chart-svg {
+  @apply h-auto w-full;
+}
+.dashboard-chart-grid {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+.dashboard-chart-axis {
+  fill: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dashboard-chart-bar {
+  transition: opacity 0.15s ease;
+}
+.dashboard-chart-bar:hover {
+  opacity: 0.85;
+}
+.dashboard-chart-legend {
+  @apply mt-3 flex flex-wrap justify-center gap-4;
+}
+.dashboard-chart-legend-item {
+  @apply inline-flex items-center gap-2 text-xs font-semibold text-slate-600;
+}
+.dashboard-chart-legend-dot {
+  @apply inline-block h-2.5 w-2.5 rounded-full;
+}
+.dashboard-donut-layout {
+  @apply flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:justify-center;
+}
+.dashboard-donut-chart {
+  @apply relative shrink-0;
+}
+.dashboard-donut-center {
+  @apply pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center;
+}
+.dashboard-donut-center-value {
+  @apply text-lg font-extrabold text-slate-900;
+}
+.dashboard-donut-center-label {
+  @apply text-[11px] font-semibold uppercase tracking-wide text-slate-500;
+}
+.dashboard-donut-legend {
+  @apply w-full min-w-0 space-y-2 sm:max-w-xs;
+}
+.dashboard-donut-legend-row {
+  @apply flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2;
+}
+
 @media (max-width: 640px) {
   .dashboard-bar-row {
     grid-template-columns: 72px 1fr 80px;

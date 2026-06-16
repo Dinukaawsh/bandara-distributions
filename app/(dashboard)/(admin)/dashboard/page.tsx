@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { BarChart } from '@/components/dashboard/BarChart';
+import { DonutChart } from '@/components/dashboard/DonutChart';
+import { LineChart } from '@/components/dashboard/LineChart';
 import { Alert, Card, PageLoader } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
 import { useSession } from '@/hooks/useSession';
@@ -26,6 +29,13 @@ type DashboardData = {
   };
 };
 
+const COUNTER_COLORS = ['#1d4ed8', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#be185d', '#4f46e5'];
+
+function shortDate(dateStr: string) {
+  const date = new Date(`${dateStr}T12:00:00`);
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 export default function AdminDashboardPage() {
   useSession(true, true);
   const { t } = useLang();
@@ -40,25 +50,51 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const maxDailySales = useMemo(() => {
-    if (!data?.sales_by_day?.length) return 1;
-    return Math.max(...data.sales_by_day.map((d) => d.sales), 1);
-  }, [data]);
+  const chartLabels = useMemo(
+    () => (data?.sales_by_day || []).map((row) => shortDate(row.date)),
+    [data]
+  );
 
-  const maxCounterSales = useMemo(() => {
-    if (!data?.counter_sales_today?.length) return 1;
-    return Math.max(...data.counter_sales_today.map((d) => d.amount), 1);
-  }, [data]);
+  const moneyShort = useMemo(
+    () => (value: number) => {
+      if (value >= 1000000) return `LKR ${(value / 1000000).toFixed(1)}M`;
+      if (value >= 1000) return `LKR ${(value / 1000).toFixed(0)}k`;
+      return `LKR ${Math.round(value)}`;
+    },
+    []
+  );
+
+  const cashierStatusSlices = useMemo(() => {
+    if (!data) return [];
+    const busy = data.cashier_statuses.filter((c) => c.availability_status === 'busy').length;
+    const available = data.cashier_statuses.length - busy;
+    return [
+      { label: t('ලබා ගත හැක', 'Available'), value: available, color: '#059669' },
+      { label: t('කාර්යබහුල', 'Busy'), value: busy, color: '#d97706' },
+    ];
+  }, [data, t]);
+
+  const counterSlices = useMemo(
+    () =>
+      (data?.counter_sales_today || []).map((row, index) => ({
+        label: row.counter_no,
+        value: row.amount,
+        color: COUNTER_COLORS[index % COUNTER_COLORS.length],
+      })),
+    [data]
+  );
 
   if (loading) return <PageLoader />;
   if (!data) return <Alert type="error">{t('ඩෑෂ්බෝඩ් දත්ත පූරණය අසාර්ථකයි', 'Failed to load dashboard data')}</Alert>;
+
+  const totalCounterSales = data.counter_sales_today.reduce((sum, row) => sum + row.amount, 0);
 
   return (
     <div className="space-y-5">
       <div className="page-header">
         <h1 className="page-title label-si">{t('පරිපාලක ඩෑෂ්බෝඩ්', 'Admin Dashboard')}</h1>
         <p className="page-subtitle label-si">
-          {t('මුළු ව්‍යාපාර දත්ත, අද දින ප්‍රගතිය සහ කැෂියර් තත්ත්වය', 'Overall business metrics, today progress, and cashier status')}
+          {t('මුළු ව්‍යාපාර දත්ත, අද දින ප්‍රගතිය සහ කැෂියර් තත්වය', 'Overall business metrics, today progress, and cashier status')}
         </p>
       </div>
 
@@ -107,41 +143,59 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2" title={t('පසුගිය දින 7 විකුණුම්', 'Last 7 Days Sales')}>
-          <div className="space-y-2">
-            {data.sales_by_day.map((row) => {
-              const pct = Math.max(4, (row.sales / maxDailySales) * 100);
-              return (
-                <div key={row.date} className="dashboard-bar-row">
-                  <div className="dashboard-bar-label">{row.date}</div>
-                  <div className="dashboard-bar-track">
-                    <div className="dashboard-bar-fill" style={{ width: `${pct}%` }} />
-                  </div>
-                  <div className="dashboard-bar-value">LKR {row.sales.toFixed(2)}</div>
-                </div>
-              );
-            })}
-          </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card title={t('පසුගිය දින 7 විකුණුම් සහ ලාභය', 'Last 7 Days Sales & Profit')}>
+          <BarChart
+            labels={chartLabels}
+            series={[
+              {
+                label: t('විකුණුම්', 'Sales'),
+                color: '#1d4ed8',
+                values: data.sales_by_day.map((row) => row.sales),
+              },
+              {
+                label: t('ලාභය', 'Profit'),
+                color: '#059669',
+                values: data.sales_by_day.map((row) => row.profit),
+              },
+            ]}
+            formatValue={moneyShort}
+          />
         </Card>
 
-        <Card title={t('අද කවුන්ටර විකුණුම්', 'Counter Sales Today')}>
-          <div className="space-y-2">
-            {data.counter_sales_today.length === 0 ? (
-              <p className="text-sm text-slate-500 label-si">{t('අද විකුණුම් නොමැත', 'No sales today')}</p>
-            ) : data.counter_sales_today.map((row) => {
-              const pct = Math.max(5, (row.amount / maxCounterSales) * 100);
-              return (
-                <div key={row.counter_no} className="dashboard-bar-row">
-                  <div className="dashboard-bar-label">{row.counter_no}</div>
-                  <div className="dashboard-bar-track">
-                    <div className="dashboard-bar-fill dashboard-bar-fill-alt" style={{ width: `${pct}%` }} />
-                  </div>
-                  <div className="dashboard-bar-value">LKR {row.amount.toFixed(2)}</div>
-                </div>
-              );
-            })}
-          </div>
+        <Card title={t('විකුණුම් ප්‍රවණතාව', 'Sales Trend')}>
+          <LineChart
+            labels={chartLabels}
+            values={data.sales_by_day.map((row) => row.sales)}
+            formatValue={moneyShort}
+          />
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card title={t('අද කවුන්ටර විකුණුම් වෙන් කිරීම', 'Today Counter Sales Split')}>
+          {counterSlices.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-500 label-si">{t('අද විකුණුම් නොමැත', 'No sales today')}</p>
+          ) : (
+            <DonutChart
+              slices={counterSlices}
+              centerValue={moneyShort(totalCounterSales)}
+              centerLabel={t('මුළු විකුණුම්', 'Total Sales')}
+              formatValue={(value) => `LKR ${value.toFixed(2)}`}
+            />
+          )}
+        </Card>
+
+        <Card title={t('කැෂියර් තත්ත්ව වෙන් කිරීම', 'Cashier Status Split')}>
+          {data.cashier_statuses.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-500 label-si">{t('කැෂියර්වරු නැත', 'No cashiers')}</p>
+          ) : (
+            <DonutChart
+              slices={cashierStatusSlices}
+              centerValue={String(data.cashier_statuses.length)}
+              centerLabel={t('කැෂියර්', 'Cashiers')}
+            />
+          )}
         </Card>
       </div>
 
@@ -174,4 +228,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
