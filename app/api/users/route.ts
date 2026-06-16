@@ -3,6 +3,7 @@ import { getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
 import { hashPassword, validatePasswordStrength } from '@/lib/password';
 import { validateUserAssignment } from '@/lib/user-validation';
+import { logNotification } from '@/lib/notifications';
 
 const USER_PROJECTION = {
   projection: { password: 0 },
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
       is_active: true,
       created_at: new Date(),
     });
+    await logNotification(db, 'user_registered', `New user registered: ${full_name} (${username})`, { username, role });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
@@ -154,6 +156,7 @@ export async function DELETE(request: NextRequest) {
 
     const db = await getBillingDb();
     await db.collection('users').updateOne({ username }, { $set: { is_active: false } });
+    await logNotification(db, 'user_disabled', `User disabled: ${username}`, { username });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/users error:', error);
@@ -175,6 +178,7 @@ export async function PATCH(request: NextRequest) {
     }
     const db = await getBillingDb();
     await db.collection('users').updateOne({ username }, { $set: { is_active } });
+    await logNotification(db, is_active ? 'user_enabled' : 'user_disabled', is_active ? `User enabled: ${username}` : `User disabled: ${username}`, { username });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('PATCH /api/users error:', error);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser, isAdmin } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
+import { logNotification } from '@/lib/notifications';
 
 const VALID_STATUSES = new Set(['available', 'busy']);
 
@@ -37,6 +38,11 @@ export async function PATCH(request: NextRequest) {
       { username: targetUsername },
       { $set: { availability_status: status, status_updated_at: new Date() } }
     );
+    if (status === 'busy') {
+      await logNotification(db, 'cashier_unavailable', `Cashier marked unavailable: ${targetUsername}`, {
+        username: targetUsername,
+      });
+    }
 
     return NextResponse.json({ success: true, username: targetUsername, availability_status: status });
   } catch (error) {

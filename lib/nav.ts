@@ -13,6 +13,7 @@ export const mainNav: NavItem[] = [
   { href: '/manage-store', icon: 'store', labelSi: 'ආයතන විස්තර', labelEn: 'Store', adminOnly: true },
   { href: '/manage-users', icon: 'users', labelSi: 'පරිශීලකයින්', labelEn: 'Users', adminOnly: true },
   { href: '/sales-report', icon: 'report', labelSi: 'විකුණුම් වාර්තා', labelEn: 'Sales Report', adminOnly: true },
+  { href: '/notifications', icon: 'notifications', labelSi: 'දැනුම්දීම්', labelEn: 'Notifications', adminOnly: true },
   { href: '/stock-alerts', icon: 'alerts', labelSi: 'තොග දැනුම්දීම්', labelEn: 'Stock Alerts', adminOnly: true },
   { href: '/settings', icon: 'settings', labelSi: 'සැකසුම්', labelEn: 'Settings', adminOnly: true },
 ];

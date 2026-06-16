@@ -152,6 +152,12 @@ export default function BillingPage() {
         if (item.barcode !== barcodeKey) return [item];
         const nextQty = item.qty + delta;
         if (nextQty <= 0) return [];
+        const product = productsDb[barcodeKey];
+        const available = Number(product?.stock_qty || 0);
+        if (nextQty > available) {
+          setScanResult(`${item.name} ${t('තොගය ප්‍රමාණවත් නැත', 'has limited stock')}: ${available}`);
+          return [item];
+        }
         const unitPrice = item.ourPrice;
         const unitProfit = item.qty > 0 ? item.totalProfit / item.qty : 0;
         return [{
@@ -162,7 +168,7 @@ export default function BillingPage() {
         }];
       })
     );
-  }, []);
+  }, [productsDb, t]);
   const removeItem = useCallback((barcodeKey: string) => {
     setBillItems((prev) => prev.filter((item) => item.barcode !== barcodeKey));
   }, []);
@@ -180,6 +186,16 @@ export default function BillingPage() {
       const marketPrice = Number(prod.market_price) || 0;
       const ourPrice = Number(prod.our_price) || 0;
       const costPrice = Number(prod.cost_price) || ourPrice * 0.95;
+      const available = Number(prod.stock_qty) || 0;
+      const requested = (existing?.qty || 0) + quantity;
+      if (available <= 0) {
+        setScanResult(`${prod.name} ${t('තොග නැත', 'is out of stock')}`);
+        return prev;
+      }
+      if (requested > available) {
+        setScanResult(`${prod.name} ${t('තොගය ප්‍රමාණවත් නැත', 'has limited stock')}: ${available}`);
+        return prev;
+      }
       if (existing) {
         return prev.map((i) =>
           i.barcode === trimmed
@@ -210,7 +226,7 @@ export default function BillingPage() {
     setQty('1');
     setTimeout(() => barcodeRef.current?.focus(), 50);
     return true;
-  }, [productsDb, qty, ln]);
+  }, [productsDb, qty, ln, t]);
 
   const processBilling = useCallback(() => {
     addProductToBill(barcode);

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { HiOutlineChartBar, HiOutlineCog6Tooth, HiOutlineShoppingBag, HiOutlineUserCircle } from 'react-icons/hi2';
+import { HiOutlineBellAlert, HiOutlineChartBar, HiOutlineCog6Tooth, HiOutlineShoppingBag, HiOutlineSquares2X2, HiOutlineUserCircle } from 'react-icons/hi2';
 import { MdOutlinePointOfSale, MdOutlineStorefront, MdOutlinePeopleAlt, MdOutlineInventory2, MdOutlineEventAvailable, MdOutlinePassword } from 'react-icons/md';
 import { mainNav, navLabel, userNav } from '@/lib/nav';
 import type { Lang } from '@/lib/translations';
@@ -20,12 +20,13 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
   const navItems = mainNav.filter((item) => !item.adminOnly || isAdmin);
   const [storeName, setStoreName] = useState('BANDARA STORE');
   const iconMap: Record<string, React.ReactNode> = {
-    dashboard: <HiOutlineChartBar />,
+    dashboard: <HiOutlineSquares2X2 />,
     billing: <MdOutlinePointOfSale />,
     products: <MdOutlineInventory2 />,
     store: <MdOutlineStorefront />,
     users: <MdOutlinePeopleAlt />,
     report: <HiOutlineChartBar />,
+    notifications: <HiOutlineBellAlert />,
     alerts: <HiOutlineShoppingBag />,
     settings: <HiOutlineCog6Tooth />,
     myday: <MdOutlineEventAvailable />,

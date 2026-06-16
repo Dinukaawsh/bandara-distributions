@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookieOptions } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
 import { getSessionUser, isAdmin } from '@/lib/auth';
+import { logNotification } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
       stock,
       created_at: new Date(),
     });
+    await logNotification(db, 'product_added', `New product added: ${name} (${barcode})`, { barcode, name });
 
     return NextResponse.json({
       status: 'success',
@@ -148,7 +150,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     const db = await getBillingDb();
+    const existing = await db.collection('products').findOne({ barcode });
     await db.collection('products').deleteOne({ barcode });
+    await logNotification(
+      db,
+      'product_deleted',
+      `Product deleted: ${String(existing?.name || barcode)} (${barcode})`,
+      { barcode, name: String(existing?.name || '') }
+    );
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/products error:', error);

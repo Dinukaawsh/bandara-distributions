@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
+import { logNotification } from '@/lib/notifications';
 
 type BillItem = {
   barcode: string;
@@ -58,6 +59,20 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getBillingDb();
+    const products = db.collection('products');
+    for (const item of bill_items) {
+      const barcode = String(item.barcode);
+      const qty = Number(item.qty) || 0;
+      const product = await products.findOne({ barcode });
+      const stock = Number(product?.stock || 0);
+      if (!product || stock <= 0) {
+        return NextResponse.json({ status: 'error', message: `${item.name} is out of stock` }, { status: 400 });
+      }
+      if (qty > stock) {
+        return NextResponse.json({ status: 'error', message: `${item.name} stock available is only ${stock}` }, { status: 400 });
+      }
+    }
+
     const bill_no = await generateBillNo(db);
 
     await db.collection('sales_orders').insertOne({
@@ -69,6 +84,7 @@ export async function POST(request: NextRequest) {
       cashier_name,
       cashier_username,
       counter_no,
+      bill_items,
       created_at: new Date(),
     });
 
@@ -84,10 +100,26 @@ export async function POST(request: NextRequest) {
     await db.collection('sales_items').insertMany(salesItems);
 
     for (const item of bill_items) {
-      await db.collection('products').updateOne(
-        { barcode: String(item.barcode) },
-        { $inc: { stock: -Number(item.qty) } }
-      );
+      const barcode = String(item.barcode);
+      const qty = Number(item.qty);
+      const productBefore = await products.findOne({ barcode });
+      await products.updateOne({ barcode }, { $inc: { stock: -qty } });
+      const productAfter = await products.findOne({ barcode });
+      if (Number(productAfter?.stock || 0) <= 0) {
+        await logNotification(
+          db,
+          'stock_out',
+          `Stock out alert: ${String(item.name)} is now out of stock`,
+          { barcode, product_name: String(item.name), cashier_username }
+        );
+      } else if (Number(productBefore?.stock || 0) > 0 && Number(productAfter?.stock || 0) <= 3) {
+        await logNotification(
+          db,
+          'stock_out',
+          `Low stock alert: ${String(item.name)} has only ${Number(productAfter?.stock || 0)} left`,
+          { barcode, product_name: String(item.name), cashier_username }
+        );
+      }
     }
 
     return NextResponse.json({ status: 'success', bill_no, message: 'Saved!' });
