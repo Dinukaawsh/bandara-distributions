@@ -39,56 +39,56 @@ export default function MyDayPage() {
       .finally(() => setPageLoading(false));
   }, [loading, user, router]);
 
-  const moneyLabel = lang === 'si' ? 'Rupees (LKR)' : 'LKR';
+  const moneyLabel = lang === 'si' ? 'රුපියල්' : 'LKR';
 
   if (loading || pageLoading) return <PageLoader />;
-  if (!data) return <Alert type="error">{t('No daily data available', 'No daily data available')}</Alert>;
+  if (!data) return <Alert type="error">{t('අද දින දත්ත නොමැත', 'No daily data available')}</Alert>;
 
   return (
     <div className="space-y-5">
       <div className="page-header">
-        <h1 className="page-title label-si">{t('My Daily Sales', 'My Daily Sales')}</h1>
+        <h1 className="page-title label-si">{t('මගේ අද විකුණුම්', 'My Daily Sales')}</h1>
         <p className="page-subtitle label-si">
-          {t('Today only - no history shown', 'Today only - no history shown')}
+          {t('අද දින වාර්තාව පමණි - ඉතිහාසය නොපෙන්වයි', 'Today only - no history shown')}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('Cashier', 'Cashier')}</p>
+          <p className="dashboard-metric-label">{t('කැෂියර්', 'Cashier')}</p>
           <p className="text-base font-bold label-si">{data.cashier.full_name}</p>
           <p className="text-xs text-slate-500">{data.cashier.counter_no}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('Today Sales', 'Today Sales')}</p>
+          <p className="dashboard-metric-label">{t('අද විකුණුම්', 'Today Sales')}</p>
           <p className="dashboard-metric-value">{moneyLabel} {data.stats.total_sales.toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('Today Profit', 'Today Profit')}</p>
+          <p className="dashboard-metric-label">{t('අද ලාභය', 'Today Profit')}</p>
           <p className="dashboard-metric-value">{moneyLabel} {data.stats.total_profit.toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('Today Bills', 'Today Bills')}</p>
+          <p className="dashboard-metric-label">{t('අද බිල්පත්', 'Today Bills')}</p>
           <p className="dashboard-metric-value">{data.stats.total_bills}</p>
         </Card>
       </div>
 
-      <Card title={t('My Bills Today', 'My Bills Today')}>
+      <Card title={t('අද මගේ බිල්පත්', 'My Bills Today')}>
         <div className="data-table-wrap custom-scrollbar">
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t('Bill No', 'Bill No')}</th>
-                <th className="text-right">{t('Amount', 'Amount')}</th>
-                <th className="text-right">{t('Profit', 'Profit')}</th>
-                <th>{t('Time', 'Time')}</th>
+                <th>{t('බිල් අංකය', 'Bill No')}</th>
+                <th className="text-right">{t('මුදල', 'Amount')}</th>
+                <th className="text-right">{t('ලාභය', 'Profit')}</th>
+                <th>{t('වේලාව', 'Time')}</th>
               </tr>
             </thead>
             <tbody>
               {data.orders.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-slate-500 label-si">
-                    {t('No bills for today', 'No bills for today')}
+                    {t('අද බිල්පත් නොමැත', 'No bills for today')}
                   </td>
                 </tr>
               ) : data.orders.map((o) => (

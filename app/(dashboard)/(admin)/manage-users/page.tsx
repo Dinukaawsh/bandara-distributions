@@ -13,12 +13,13 @@ type User = {
   role: string;
   counter_no: string;
   availability_status?: 'available' | 'busy';
+  is_active?: boolean;
   password?: string;
 };
 
 function StatusBadge({ status, t }: { status?: string; t: (si: string, en: string) => string }) {
   const busy = status === 'busy';
-  return <span className={busy ? 'badge-warning' : 'badge-stock'}>{busy ? t('Busy', 'Busy') : t('Available', 'Available')}</span>;
+  return <span className={busy ? 'badge-warning' : 'badge-stock'}>{busy ? t('කාර්යබහුල', 'Busy') : t('ලබා ගත හැක', 'Available')}</span>;
 }
 
 export default function ManageUsersPage() {
@@ -59,11 +60,11 @@ export default function ManageUsersPage() {
     }
   }
 
-  async function handleDelete(userName: string) {
-    const ok = await confirm({ title: t('Delete User', 'Delete User'), message: t('Delete this user?', 'Delete this user?') });
+  async function handleDisable(userName: string) {
+    const ok = await confirm({ title: t('පරිශීලකයා අක්‍රීය කරන්න', 'Disable User'), message: t('මෙම පරිශීලකයා අක්‍රීය කරන්නද?', 'Disable this user?') });
     if (!ok) return;
     await fetch(`/api/users?username=${encodeURIComponent(userName)}`, { method: 'DELETE' });
-    setMessage(t('Deleted!', 'Deleted!'));
+    setMessage(t('පරිශීලකයා අක්‍රීය කරන ලදී!', 'User disabled!'));
     fetchUsers();
   }
 
@@ -72,24 +73,24 @@ export default function ManageUsersPage() {
       <div className="page-header">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="page-title label-si">{t('User Accounts', 'User Accounts')}</h1>
-            <p className="page-subtitle label-si">{t('Manage administrators and cashiers separately.', 'Manage administrators and cashiers separately.')}</p>
+            <h1 className="page-title label-si">{t('පරිශීලක කළමනාකරණය', 'User Accounts')}</h1>
+            <p className="page-subtitle label-si">{t('පරිපාලකයින් සහ කැෂියර්වරු වෙන් කර කළමනාකරණය කරන්න.', 'Manage administrators and cashiers separately.')}</p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="danger"
               disabled={selectedUsers.length === 0}
               onClick={async () => {
-                const ok = await confirm({ title: t('Delete Selected Users', 'Delete Selected Users'), message: t('Delete selected users?', 'Delete selected users?') });
+                const ok = await confirm({ title: t('තෝරාගත් පරිශීලකයින් අක්‍රීය කරන්න', 'Disable Selected Users'), message: t('තෝරාගත් පරිශීලකයින් අක්‍රීය කරන්නද?', 'Disable selected users?') });
                 if (!ok) return;
                 await Promise.all(selectedUsers.map((u) => fetch(`/api/users?username=${encodeURIComponent(u)}`, { method: 'DELETE' })));
-                setMessage(t('Deleted!', 'Deleted!'));
+                setMessage(t('තෝරාගත් පරිශීලකයින් අක්‍රීය කරන ලදී!', 'Selected users disabled!'));
                 fetchUsers();
               }}
             >
-              {t('Delete Selected', 'Delete Selected')}
+              {t('තෝරාගත් දේ අක්‍රීය කරන්න', 'Disable Selected')}
             </Button>
-            <Button onClick={() => setShowCreate(true)}>{t('Create User', 'Create User')}</Button>
+            <Button onClick={() => setShowCreate(true)}>{t('නව පරිශීලකයා', 'Create User')}</Button>
           </div>
         </div>
       </div>
@@ -103,17 +104,17 @@ export default function ManageUsersPage() {
             <thead>
               <tr>
                 <th className="text-center"><Checkbox checked={allSelected} onChange={(checked) => setSelectedUsers(checked ? nonProtected.map((u) => u.username) : [])} /></th>
-                <th className="text-left">{t('Name', 'Name')}</th>
-                <th className="text-left">{t('Username', 'Username')}</th>
-                <th className="text-left">{t('Role', 'Role')}</th>
-                <th className="text-left">{t('Counter', 'Counter')}</th>
-                <th className="text-center">{t('Status', 'Status')}</th>
-                <th className="text-center">{t('Action', 'Action')}</th>
+                <th className="text-left">{t('නම', 'Name')}</th>
+                <th className="text-left">{t('පරිශීලක නාමය', 'Username')}</th>
+                <th className="text-left">{t('භූමිකාව', 'Role')}</th>
+                <th className="text-left">{t('කවුන්ටරය', 'Counter')}</th>
+                <th className="text-center">{t('තත්වය', 'Status')}</th>
+                <th className="text-center">{t('ක්‍රියා', 'Action')}</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 ? (
-                <tr><td colSpan={7} className="py-6 text-center text-sm text-slate-500">{t('No users', 'No users')}</td></tr>
+                <tr><td colSpan={7} className="py-6 text-center text-sm text-slate-500">{t('පරිශීලකයින් නැත', 'No users')}</td></tr>
               ) : users.map((u) => (
                 <tr key={u.username}>
                   <td className="text-center">
@@ -125,15 +126,37 @@ export default function ManageUsersPage() {
                   <td>{u.username}</td>
                   <td>{u.role}</td>
                   <td>{u.counter_no}</td>
-                  <td className="text-center">{isAdminRole(u.role) ? '—' : <StatusBadge status={u.availability_status} t={t} />}</td>
+                  <td className="text-center">
+                    {u.is_active === false
+                      ? <span className="badge-danger">{t('අක්‍රීයයි', 'Disabled')}</span>
+                      : (isAdminRole(u.role) ? '—' : <StatusBadge status={u.availability_status} t={t} />)}
+                  </td>
                   <td className="cell-actions">
                     <div className="cell-actions-inner">
                       {u.username.toLowerCase() === 'admin' ? (
-                        <span className="text-slate-400 text-xs">{t('Protected', 'Protected')}</span>
+                        <span className="text-slate-400 text-xs">{t('ආරක්ෂිත', 'Protected')}</span>
                       ) : (
                         <>
-                          <Button variant="warning" className="!py-1 !text-xs" onClick={() => setEditUser(u)}>{t('Edit', 'Edit')}</Button>
-                          <Button variant="danger" className="!py-1 !text-xs" onClick={() => handleDelete(u.username)}>{t('Delete', 'Delete')}</Button>
+                          <Button variant="warning" className="!py-1 !text-xs" onClick={() => setEditUser(u)}>{t('සංස්කරණය', 'Edit')}</Button>
+                          {u.is_active === false ? (
+                            <Button
+                              variant="success"
+                              className="!py-1 !text-xs"
+                              onClick={async () => {
+                                await fetch('/api/users', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ username: u.username, is_active: true }),
+                                });
+                                setMessage(t('පරිශීලකයා සක්‍රීය කරන ලදී!', 'User enabled!'));
+                                fetchUsers();
+                              }}
+                            >
+                              {t('සක්‍රීය කරන්න', 'Enable')}
+                            </Button>
+                          ) : (
+                            <Button variant="danger" className="!py-1 !text-xs" onClick={() => handleDisable(u.username)}>{t('අක්‍රීය කරන්න', 'Disable')}</Button>
+                          )}
                         </>
                       )}
                     </div>
@@ -145,8 +168,8 @@ export default function ManageUsersPage() {
         </div>
       </Card>
 
-      <Card title={t('Administrators', 'Administrators')}><p className="text-sm">{admins.length}</p></Card>
-      <Card title={t('Cashiers', 'Cashiers')}><p className="text-sm">{cashiers.length}</p></Card>
+      <Card title={t('පරිපාලකයින්', 'Administrators')}><p className="text-sm">{admins.length}</p></Card>
+      <Card title={t('කැෂියර්වරු', 'Cashiers')}><p className="text-sm">{cashiers.length}</p></Card>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('Add New User', 'Add New User')} size="lg" footerSplit footer={<>
         <Button variant="secondary" className="w-full" onClick={() => setShowCreate(false)}>{t('Close', 'Close')}</Button>

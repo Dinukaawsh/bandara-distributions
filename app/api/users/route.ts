@@ -24,6 +24,7 @@ export async function GET() {
         role: u.role,
         counter_no: u.counter_no,
         availability_status: u.availability_status === 'busy' ? 'busy' : 'available',
+        is_active: u.is_active !== false,
       })),
     }, { status: 200 });
   } catch (error) {
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
       role,
       counter_no,
       availability_status: isCashier ? 'available' : undefined,
+      is_active: true,
       created_at: new Date(),
     });
 
@@ -147,14 +149,35 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
     if (!username || username.toLowerCase() === 'admin') {
-      return NextResponse.json({ error: 'Cannot delete this user' }, { status: 400 });
+      return NextResponse.json({ error: 'Cannot disable this user' }, { status: 400 });
     }
 
     const db = await getBillingDb();
-    await db.collection('users').deleteOne({ username });
+    await db.collection('users').updateOne({ username }, { $set: { is_active: false } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/users error:', error);
     return NextResponse.json({ error: 'Unable to delete user.' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await getSessionUser();
+    if (!user || user.role.toLowerCase() !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+    const body = await request.json();
+    const username = String(body.username || '');
+    const is_active = Boolean(body.is_active);
+    if (!username || username.toLowerCase() === 'admin') {
+      return NextResponse.json({ error: 'Cannot update this user' }, { status: 400 });
+    }
+    const db = await getBillingDb();
+    await db.collection('users').updateOne({ username }, { $set: { is_active } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('PATCH /api/users error:', error);
+    return NextResponse.json({ error: 'Unable to update user status.' }, { status: 500 });
   }
 }

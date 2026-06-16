@@ -18,7 +18,7 @@ type ProductForm = {
 
 export default function SettingsProductsPage() {
   useSession(true, true);
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { confirm } = useDialog();
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
@@ -28,6 +28,7 @@ export default function SettingsProductsPage() {
   const [flash, setFlash] = useState('');
   const [createError, setCreateError] = useState('');
   const [selectedBarcodes, setSelectedBarcodes] = useState<string[]>([]);
+  const moneyLabel = lang === 'si' ? 'රුපියල්' : 'LKR';
 
   useEffect(() => { loadProducts(); }, []);
 
@@ -54,39 +55,39 @@ export default function SettingsProductsPage() {
     <div className="space-y-4">
       <div className="page-header">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="page-title label-si">{t('Product Management', 'Product Management')}</h1>
+          <h1 className="page-title label-si">{t('භාණ්ඩ කළමනාකරණය', 'Product Management')}</h1>
           <div className="flex gap-2">
             <Button
               variant="danger"
               disabled={selectedBarcodes.length === 0}
               onClick={async () => {
-                const ok = await confirm({ title: t('Delete Selected Products', 'Delete Selected Products'), message: t('Delete selected products?', 'Delete selected products?') });
+                const ok = await confirm({ title: t('තෝරාගත් භාණ්ඩ මකන්න', 'Delete Selected Products'), message: t('තෝරාගත් භාණ්ඩ මකා දමන්නද?', 'Delete selected products?') });
                 if (!ok) return;
                 await Promise.all(selectedBarcodes.map((code) => fetch(`/api/products?barcode=${encodeURIComponent(code)}`, { method: 'DELETE' })));
                 setFlash('deleted');
                 loadProducts();
               }}
             >
-              {t('Delete Selected', 'Delete Selected')}
+              {t('තෝරාගත් දේ මකන්න', 'Delete Selected')}
             </Button>
-            <Button onClick={() => setShowCreate(true)}>{t('Add Product', 'Add Product')}</Button>
+            <Button onClick={() => setShowCreate(true)}>{t('භාණ්ඩයක් එක් කරන්න', 'Add Product')}</Button>
           </div>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Total Products', 'Total Products')}</p><p className="dashboard-metric-value">{metrics.total}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Low Stock', 'Low Stock')}</p><p className="dashboard-metric-value">{metrics.lowStock}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Out of Stock', 'Out of Stock')}</p><p className="dashboard-metric-value">{metrics.noStock}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Avg Price', 'Avg Price')}</p><p className="dashboard-metric-value">LKR {metrics.avgPrice.toFixed(2)}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('මුළු භාණ්ඩ', 'Total Products')}</p><p className="dashboard-metric-value">{metrics.total}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('අඩු තොග', 'Low Stock')}</p><p className="dashboard-metric-value">{metrics.lowStock}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('තොග නැති', 'Out of Stock')}</p><p className="dashboard-metric-value">{metrics.noStock}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('සාමාන්‍ය මිල', 'Avg Price')}</p><p className="dashboard-metric-value">{moneyLabel} {metrics.avgPrice.toFixed(2)}</p></Card>
       </div>
 
-      {flash === 'updated' && <Alert type="success">{t('Updated!', 'Updated!')}</Alert>}
-      {flash === 'deleted' && <Alert type="error">{t('Deleted!', 'Deleted!')}</Alert>}
-      {flash === 'created' && <Alert type="success">{t('Product added!', 'Product added!')}</Alert>}
+      {flash === 'updated' && <Alert type="success">{t('යාවත්කාලීන විය!', 'Updated!')}</Alert>}
+      {flash === 'deleted' && <Alert type="error">{t('මකා දමන ලදී!', 'Deleted!')}</Alert>}
+      {flash === 'created' && <Alert type="success">{t('භාණ්ඩය එක් කරන ලදී!', 'Product added!')}</Alert>}
       {createError && <Alert type="error">{createError}</Alert>}
 
-      <SearchBar value={search} onChange={setSearch} placeholder={t('Search by name or barcode...', 'Search by name or barcode...')} className="mb-2" />
+      <SearchBar value={search} onChange={setSearch} placeholder={t('නම හෝ බාර්කෝඩ් මඟින් සොයන්න...', 'Search by name or barcode...')} className="mb-2" />
 
       <Card className="overflow-hidden p-0">
         <div className="data-table-wrap custom-scrollbar">
@@ -97,12 +98,12 @@ export default function SettingsProductsPage() {
                   const keys = filtered.map((p) => p.barcode);
                   setSelectedBarcodes(checked ? Array.from(new Set([...selectedBarcodes, ...keys])) : selectedBarcodes.filter((k) => !keys.includes(k)));
                 }} /></th>
-                <th className="text-left">{t('Barcode', 'Barcode')}</th>
-                <th className="text-left">{t('Name', 'Name')}</th>
-                <th className="text-right">{t('Market', 'Market')}</th>
-                <th className="text-right">{t('Our Price', 'Our Price')}</th>
-                <th className="text-center">{t('Stock', 'Stock')}</th>
-                <th className="text-center">{t('Action', 'Action')}</th>
+                <th className="text-left">{t('බාර්කෝඩ්', 'Barcode')}</th>
+                <th className="text-left">{t('නම', 'Name')}</th>
+                <th className="text-right">{t('වෙළඳපොල මිල', 'Market')}</th>
+                <th className="text-right">{t('අපේ මිල', 'Our Price')}</th>
+                <th className="text-center">{t('තොගය', 'Stock')}</th>
+                <th className="text-center">{t('ක්‍රියා', 'Action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -113,8 +114,8 @@ export default function SettingsProductsPage() {
                   <td className="text-center"><Checkbox checked={selectedBarcodes.includes(p.barcode)} onChange={(checked) => setSelectedBarcodes((prev) => checked ? [...prev, p.barcode] : prev.filter((v) => v !== p.barcode))} /></td>
                   <td className="font-mono">{p.barcode}</td>
                   <td className="font-bold label-si">{p.name}</td>
-                  <td className="text-right">LKR {Number(p.market_price).toFixed(2)}</td>
-                  <td className="text-right">LKR {Number(p.our_price).toFixed(2)}</td>
+                  <td className="text-right">{moneyLabel} {Number(p.market_price).toFixed(2)}</td>
+                  <td className="text-right">{moneyLabel} {Number(p.our_price).toFixed(2)}</td>
                   <td className="text-center"><span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span></td>
                   <td className="cell-actions">
                     <div className="cell-actions-inner">

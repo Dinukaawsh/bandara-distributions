@@ -44,6 +44,9 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 401 });
     }
+    if (user.is_active === false) {
+      return NextResponse.json({ error: 'This account is disabled. Contact admin.' }, { status: 403 });
+    }
 
     const storedPassword = String(user.password || '');
     const valid = await verifyPassword(password, storedPassword);
