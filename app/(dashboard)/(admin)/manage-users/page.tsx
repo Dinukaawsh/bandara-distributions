@@ -50,7 +50,7 @@ export default function ManageUsersPage() {
           }}>
             <Input label={t('නම', 'Full Name')} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             <Input label={t('පරිශීලක නාමය', 'Username')} value={username} onChange={(e) => setUsername(e.target.value)} required />
-            <Input label={t('මුරපදය', 'Password')} value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input label={t('මුරපදය', 'Password')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             <Select label={t('භූමිකාව', 'Role')} value={role} onChange={(e) => setRole(e.target.value)} options={roles} />
             <Select label={t('කවුන්ටරය', 'Counter')} value={counterNo} onChange={(e) => setCounterNo(e.target.value)} options={counters} />
             <Button type="submit" className="w-full">{t('ගිණුම සාදන්න', 'Create Account')}</Button>
@@ -69,7 +69,7 @@ export default function ManageUsersPage() {
                   <td className="space-x-2">
                     {u.username.toLowerCase() === 'admin' ? <span className="text-slate-400 label-si">{t('ආරක්ෂිත', 'Protected')}</span> : (
                       <>
-                        <Button variant="warning" className="!py-1 !text-xs" onClick={() => setEditUser({ ...u, password: u.password || '' })}>{t('සංස්කරණය', 'Edit')}</Button>
+                        <Button variant="warning" className="!py-1 !text-xs" onClick={() => setEditUser({ ...u, password: '' })}>{t('සංස්කරණය', 'Edit')}</Button>
                         <Button variant="danger" className="!py-1 !text-xs" onClick={async () => {
                           const ok = await confirm({
                             title: t('පරිශීලකයා මකන්න', 'Delete User'),
@@ -103,7 +103,7 @@ export default function ManageUsersPage() {
           <div className="space-y-3">
             <Input label={t('නම', 'Name')} value={editUser.full_name} onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })} />
             <Input label={t('පරිශීලක නාමය', 'Username')} value={editUser.username} onChange={(e) => setEditUser({ ...editUser, username: e.target.value })} />
-            <Input label={t('මුරපදය', 'Password')} value={editUser.password || ''} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} />
+            <Input label={t('මුරපදය', 'Password')} type="password" value={editUser.password || ''} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} hint={t('හිස්ව තැබුවහොත් පවතින මුරපදය රඳවා ගනී', 'Leave blank to keep current password')} />
             <Select label={t('භූමිකාව', 'Role')} value={editUser.role} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })} options={roles} />
             <Select label={t('කවුන්ටරය', 'Counter')} value={editUser.counter_no} onChange={(e) => setEditUser({ ...editUser, counter_no: e.target.value })} options={counters} />
           </div>

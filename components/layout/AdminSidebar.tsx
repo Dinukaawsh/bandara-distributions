@@ -21,7 +21,7 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
       {open && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
           aria-label="Close menu"
         />
@@ -29,19 +29,24 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
       <aside
         className={`admin-sidebar ${open ? 'translate-x-0' : '-translate-x-full'} custom-scrollbar overflow-y-auto`}
       >
-        <div className="border-b border-slate-700 px-5 py-5">
-          <p className="text-lg font-extrabold tracking-wide text-white">BANDARA STORE</p>
-          <p className="text-xs text-slate-400 label-si">
-            {lang === 'si' ? 'බිල්පත් පද්ධතිය' : 'Billing System'}
-          </p>
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">BS</div>
+          <div>
+            <p className="text-base font-extrabold tracking-wide text-white">BANDARA STORE</p>
+            <p className="text-xs text-slate-400 label-si">
+              {lang === 'si' ? 'බිල්පත් පද්ධතිය' : 'Billing System'}
+            </p>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          <p className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 label-si">
+          <p className="sidebar-section-label label-si">
             {lang === 'si' ? 'ප්‍රධාන මෙනුව' : 'Main Menu'}
           </p>
           {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active =
+              pathname === item.href ||
+              (item.href !== '/settings' && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.href}
@@ -49,13 +54,15 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
                 onClick={onClose}
                 className={active ? 'admin-sidebar-link-active' : 'admin-sidebar-link'}
               >
-                <span>{item.icon}</span>
+                <span className="sidebar-icon">{item.icon}</span>
                 <span className="label-si">{navLabel(item, lang)}</span>
               </Link>
             );
           })}
 
-          <p className="mt-4 px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 label-si">
+          <div className="sidebar-divider" />
+
+          <p className="sidebar-section-label label-si">
             {lang === 'si' ? 'ගිණුම' : 'Account'}
           </p>
           {userNav.map((item) => {
@@ -67,7 +74,7 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
                 onClick={onClose}
                 className={active ? 'admin-sidebar-link-active' : 'admin-sidebar-link'}
               >
-                <span>{item.icon}</span>
+                <span className="sidebar-icon">{item.icon}</span>
                 <span className="label-si">{navLabel(item, lang)}</span>
               </Link>
             );

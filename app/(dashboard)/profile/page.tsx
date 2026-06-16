@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Alert, Button, Card, Input, Select } from '@/components/ui';
 import { counterOptions, useLang } from '@/hooks/useLang';
 import { useSession } from '@/hooks/useSession';
@@ -11,7 +12,6 @@ export default function ProfilePage() {
   const [loginUsername, setLoginUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [counterNo, setCounterNo] = useState('Counter 1');
-  const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const counters = useMemo(() => counterOptions(lang), [lang]);
@@ -23,35 +23,41 @@ export default function ProfilePage() {
       setLoginUsername(d.username);
       setDisplayName(d.full_name || d.username);
       setCounterNo(d.counter_no);
-      setPassword(d.password || '');
     });
   }, []);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage('');
-    setError('');
-    const res = await fetch('/api/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: loginUsername,
-        full_name: displayName,
-        counter_no: counterNo,
-        password,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || t('යාවත්කාලීන කිරීම අසාර්ථකයි', 'Update failed'));
-      return;
-    }
-    setMessage(t('ප්‍රොෆයිල් යාවත්කාලීන විය!', 'Profile updated!'));
-  }, [loginUsername, displayName, counterNo, password, t]);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setMessage('');
+      setError('');
+      const res = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: loginUsername,
+          full_name: displayName,
+          counter_no: counterNo,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || t('යාවත්කාලීන කිරීම අසාර්ථකයි', 'Update failed'));
+        return;
+      }
+      setMessage(t('ප්‍රොෆයිල් යාවත්කාලීන විය!', 'Profile updated!'));
+    },
+    [loginUsername, displayName, counterNo, t]
+  );
 
   return (
-    <div className="max-w-lg">
-      <h1 className="mb-4 text-2xl font-extrabold label-si">{t('මගේ ගිණුම', 'My Profile')}</h1>
+    <div className="max-w-lg space-y-6">
+      <div className="page-header">
+        <h1 className="page-title label-si">{t('මගේ ගිණුම', 'My Profile')}</h1>
+        <p className="page-subtitle label-si">
+          {t('බිල්පතේ පෙනෙන නම සහ කවුන්ටරය යාවත්කාලීන කරන්න.', 'Update your invoice name and counter.')}
+        </p>
+      </div>
       <Card>
         {message && <Alert type="success" className="mb-4">{message}</Alert>}
         {error && <Alert type="error" className="mb-4">{error}</Alert>}
@@ -69,10 +75,20 @@ export default function ProfilePage() {
             required
             hint={t('*බිල්පතේ මුද්‍රණය වන නම', '*Printed on invoice')}
           />
-          <Select label={t('කවුන්ටරය', 'Counter')} value={counterNo} onChange={(e) => setCounterNo(e.target.value)} options={counters} />
-          <Input label={t('මුරපදය', 'Password')} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Select
+            label={t('කවුන්ටරය', 'Counter')}
+            value={counterNo}
+            onChange={(e) => setCounterNo(e.target.value)}
+            options={counters}
+          />
           <Button type="submit" className="w-full">{t('යාවත්කාලීන කරන්න', 'Update Profile')}</Button>
         </form>
+        <p className="mt-4 text-sm text-slate-500 label-si">
+          {t('මුරපදය වෙනස් කිරීමට', 'To change your password')}{' '}
+          <Link href="/change-password" className="font-semibold text-primary hover:underline">
+            {t('මෙතන ක්ලික් කරන්න', 'click here')}
+          </Link>
+        </p>
       </Card>
     </div>
   );

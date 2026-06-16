@@ -13,6 +13,7 @@ export default function SetupAdminPage() {
   const [counterNo, setCounterNo] = useState('Admin Office');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [setupSecret, setSetupSecret] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -20,7 +21,7 @@ export default function SetupAdminPage() {
     setMessage(''); setError(''); setLoading(true);
     const res = await fetch('/api/setup/admin', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, full_name: fullName, password, counter_no: counterNo }),
+      body: JSON.stringify({ username, full_name: fullName, password, counter_no: counterNo, setup_secret: setupSecret }),
     });
     const data = await res.json();
     setLoading(false);
@@ -38,7 +39,8 @@ export default function SetupAdminPage() {
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <Input label="සම්පූර්ණ නම" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
         <Input label="පරිශීලක නාමය" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <Input label="මුරපදය" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Input label="Setup Secret" type="password" value={setupSecret} onChange={(e) => setSetupSecret(e.target.value)} required hint="From your .env SETUP_SECRET value" />
+        <Input label="මුරපදය" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required hint="අවම අක්ෂර 6 ක්" />
         <Input label="කවුන්ටරය" value={counterNo} onChange={(e) => setCounterNo(e.target.value)} required />
         <Button type="submit" loading={loading} className="w-full">සාදන්න</Button>
         <Button type="button" variant="secondary" className="w-full" onClick={() => router.push('/setup')}>ආපසු</Button>

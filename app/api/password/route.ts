@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionUser } from '@/lib/auth';
+import { clearAllAuthCookies, createSessionCookie, getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
+import { hashPassword, validatePasswordStrength, verifyPassword } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,13 +23,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'නව මුරපදයන් එකිනෙකට නොගැලපේ!' }, { status: 400 });
       }
 
-      const dbUser = await users.findOne({ username: user.username, password: current_password });
-      if (!dbUser) {
+      const strengthError = validatePasswordStrength(new_password);
+      if (strengthError) {
+        return NextResponse.json({ error: strengthError }, { status: 400 });
+      }
+
+      const dbUser = await users.findOne({ username: user.username });
+      if (!dbUser || !(await verifyPassword(current_password, String(dbUser.password)))) {
         return NextResponse.json({ error: 'ඇතුළත් කළ වත්මන් මුරපදය වැරදියි!' }, { status: 401 });
       }
 
-      await users.updateOne({ username: user.username }, { $set: { password: new_password } });
-      return NextResponse.json({ success: true, message: 'ඔබේ මුරපදය සාර්ථකව වෙනස් කරන ලදී!' });
+      await users.updateOne(
+        { username: user.username },
+        { $set: { password: await hashPassword(new_password) } }
+      );
+
+      const response = NextResponse.json({
+        success: true,
+        message: 'ඔබේ මුරපදය සාර්ථකව වෙනස් කරන ලදී!',
+      });
+
+      const sessionCookie = await createSessionCookie({
+        username: user.username,
+        role: user.role,
+        full_name: user.full_name,
+        counter_no: user.counter_no,
+      });
+      response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.options);
+
+      return response;
     }
 
     if (body.action === 'admin_reset') {
@@ -42,16 +65,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'කරුණාකර සියලුම විස්තර පුරවන්න.' }, { status: 400 });
       }
 
-      await users.updateOne({ username: target_user }, { $set: { password: admin_new_password } });
+      const strengthError = validatePasswordStrength(admin_new_password);
+      if (strengthError) {
+        return NextResponse.json({ error: strengthError }, { status: 400 });
+      }
+
+      await users.updateOne(
+        { username: target_user },
+        { $set: { password: await hashPassword(admin_new_password) } }
+      );
+
       return NextResponse.json({
         success: true,
         message: `${target_user} ගේ මුරපදය සාර්ථකව වෙනස් කරන ලදී!`,
       });
-    }
-
-    if (body.action === 'list_users' && user.role.toLowerCase() === 'admin') {
-      const allUsers = await users.find({}, { projection: { username: 1, role: 1, password: 1 } }).toArray();
-      return NextResponse.json({ users: allUsers });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

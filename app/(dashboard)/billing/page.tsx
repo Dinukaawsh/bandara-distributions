@@ -83,6 +83,8 @@ export default function BillingPage() {
   const totalSavings = billItems.reduce((s, i) => s + (i.marketPrice > i.ourPrice ? (i.marketPrice - i.ourPrice) * i.qty : 0), 0);
   const cash = parseFloat(cashPaid) || 0;
   const balance = cash - grandTotal;
+  const changeDue = cashPaid !== '' && balance >= 0 ? balance : 0;
+  const amountShort = cashPaid !== '' && balance < 0 ? Math.abs(balance) : 0;
 
   const processBilling = useCallback(() => {
     const code = barcode.trim();
@@ -121,6 +123,13 @@ export default function BillingPage() {
   const triggerPrint = async () => {
     if (!billItems.length) {
       await alert({ title: t('දැනුම්දීම', 'Notice'), message: ln.add_products_first });
+      return;
+    }
+    if (!cashPaid || cash < grandTotal) {
+      await alert({
+        title: t('දැනුම්දීම', 'Notice'),
+        message: ln.insufficient_payment,
+      });
       return;
     }
     setLiveDateTime();
@@ -245,22 +254,49 @@ export default function BillingPage() {
             <div className="flex justify-between label-si"><span>{ln.items}</span><span>{totalQty}</span></div>
             <div className="flex justify-between font-bold border-t border-dashed pt-1 label-si"><span>{ln.total}</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
             <div className="flex justify-between text-emerald-700 label-si"><span>{ln.paid}</span><span>Rs. {cash.toFixed(2)}</span></div>
-            <div className="flex justify-between text-red-600 label-si"><span>{ln.balance_short}</span><span>Rs. {Math.max(balance, 0).toFixed(2)}</span></div>
+            <div className="flex justify-between text-red-600 label-si"><span>{ln.change_return}</span><span>Rs. {changeDue.toFixed(2)}</span></div>
           </div>
 
-          <div className="no-print space-y-3">
-            <div className="text-right space-y-1 label-si">
-              <p className="font-bold">{ln.total} Rs. {grandTotal.toFixed(2)}</p>
-              <p className="text-emerald-700">{ln.paid} Rs. {cash.toFixed(2)}</p>
-              <p className="text-red-600">{ln.balance_short} Rs. {balance >= 0 ? balance.toFixed(2) : '0.00'}</p>
+          {billItems.length > 0 && (
+          <div className="no-print billing-payment-panel">
+            <h3 className="billing-payment-title label-si">{ln.payment_section}</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="billing-payment-box billing-payment-total">
+                <p className="billing-payment-label label-si">{ln.total}</p>
+                <p className="billing-payment-value">Rs. {grandTotal.toFixed(2)}</p>
+              </div>
+              <div className="billing-payment-box">
+                <Input
+                  label={ln.customer_paid}
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={cashPaid}
+                  onChange={(e) => setCashPaid(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); triggerPrint(); } }}
+                  className="!text-2xl !text-center !font-bold"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className={`billing-payment-box billing-payment-change ${amountShort > 0 ? 'billing-payment-short' : ''}`}>
+                <p className="billing-payment-label label-si">
+                  {amountShort > 0 ? ln.amount_due : ln.change_return}
+                </p>
+                <p className="billing-payment-value">
+                  {cashPaid === ''
+                    ? '—'
+                    : amountShort > 0
+                      ? `Rs. ${amountShort.toFixed(2)}`
+                      : `Rs. ${changeDue.toFixed(2)}`}
+                </p>
+              </div>
             </div>
-            <Input label={`# ${ln.cash_paid}`} type="number" step="any" value={cashPaid} onChange={(e) => setCashPaid(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); triggerPrint(); } }} className="!text-2xl !text-center !font-bold" />
-            <div className="flex gap-3">
+            <div className="mt-4 flex gap-3">
               <Button variant="success" size="lg" className="flex-1" onClick={triggerPrint}>{ln.print}</Button>
               <Button variant="danger" size="lg" onClick={() => resetBill(false)}>{ln.clear}</Button>
             </div>
           </div>
+          )}
 
           <p className="print-only text-center text-xs mt-3 label-si">{ln.thank_you}<br />Software by: TMsoftware</p>
         </Card>

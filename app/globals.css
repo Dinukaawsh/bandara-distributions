@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #f1f5f9;
-  --color-foreground: #000000;
+  --color-background: #f0f4f8;
+  --color-foreground: #0f172a;
   --color-card: #ffffff;
   --color-border: #e2e8f0;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-sidebar: #0f172a;
-  --color-sidebar-hover: #1e293b;
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-sidebar: #0c1222;
+  --color-sidebar-hover: #1a2332;
   --color-muted: #64748b;
   --font-sans: var(--font-geist-sans), var(--font-noto-sinhala), system-ui, sans-serif;
 }
@@ -176,25 +176,70 @@ body {
 }
 
 /* Table */
+.data-table-wrap {
+  @apply overflow-x-auto;
+}
 .data-table {
-  @apply w-full border-collapse text-sm;
+  @apply w-full table-fixed border-collapse text-sm;
 }
 .data-table th {
-  @apply bg-slate-800 px-4 py-3 text-left font-bold text-white;
+  @apply bg-slate-900 px-4 py-3 text-xs font-bold uppercase tracking-wide text-white align-middle;
 }
 .data-table td {
-  @apply border-b border-slate-200 px-4 py-3 text-black;
+  @apply border-b border-slate-200 px-4 py-3 text-black align-middle;
 }
 .data-table tr:hover td {
   @apply bg-slate-50;
 }
+.data-table .col-barcode { width: 14%; }
+.data-table .col-name { width: 26%; }
+.data-table .col-price { width: 12%; }
+.data-table .col-stock { width: 10%; }
+.data-table .col-actions { width: 18%; }
+.data-table .col-product { width: 38%; }
+.data-table .col-price-lg { width: 18%; }
+.data-table .cell-actions {
+  @apply text-center;
+}
+.data-table .cell-actions-inner {
+  @apply flex flex-wrap items-center justify-center gap-2;
+}
 
 /* Auth page */
 .auth-page {
-  @apply relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4;
+  @apply relative flex min-h-screen items-center justify-center p-4;
+  background: linear-gradient(135deg, #0c1222 0%, #1e3a5f 50%, #1d4ed8 100%);
+}
+.auth-bg-pattern {
+  @apply pointer-events-none absolute inset-0 opacity-20;
+  background-image: radial-gradient(circle at 25% 25%, #fff 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 .auth-card {
-  @apply w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl;
+  @apply relative z-10 w-full max-w-md rounded-2xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-sm;
+}
+.auth-brand {
+  @apply mb-8 text-center;
+}
+.auth-logo {
+  @apply mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-xl font-extrabold text-white shadow-lg;
+}
+.auth-title {
+  @apply text-xl font-extrabold tracking-widest text-slate-900;
+}
+.auth-subtitle {
+  @apply mt-1 text-sm font-semibold text-slate-700;
+}
+
+/* Page headers */
+.page-header {
+  @apply space-y-1;
+}
+.page-title {
+  @apply text-2xl font-extrabold text-slate-900;
+}
+.page-subtitle {
+  @apply text-sm text-slate-500;
 }
 
 /* Admin layout */
@@ -202,23 +247,62 @@ body {
   @apply flex min-h-screen bg-background;
 }
 .admin-sidebar {
-  @apply fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-sidebar text-white transition-transform lg:translate-x-0;
+  @apply fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-800/50 bg-sidebar text-white shadow-xl transition-transform lg:translate-x-0;
+  background: linear-gradient(180deg, #0c1222 0%, #111827 100%);
+}
+.sidebar-brand {
+  @apply flex items-center gap-3 border-b border-slate-700/60 px-5 py-5;
+}
+.sidebar-logo {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-extrabold text-white;
+}
+.sidebar-section-label {
+  @apply px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500;
+}
+.sidebar-divider {
+  @apply my-3 border-t border-slate-700/60;
+}
+.sidebar-icon {
+  @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800/80 text-base;
 }
 .admin-sidebar-link {
-  @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-sidebar-hover hover:text-white;
+  @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-400 transition hover:bg-sidebar-hover hover:text-white;
 }
 .admin-sidebar-link-active {
-  @apply flex items-center gap-3 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-sidebar-hover hover:text-white;
+  @apply flex items-center gap-3 rounded-xl bg-primary/90 px-3 py-2.5 text-sm font-semibold text-white shadow-md transition;
+}
+.admin-sidebar-link-active .sidebar-icon {
+  @apply bg-white/20;
 }
 .admin-main {
   @apply flex min-h-screen flex-1 flex-col lg:ml-64;
 }
 .admin-topbar {
-  @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-4 shadow-sm lg:px-6;
+  @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/90 px-4 shadow-sm backdrop-blur-md lg:px-6;
 }
 .admin-content {
   @apply flex-1 overflow-auto p-4 lg:p-6;
 }
+
+/* Settings cards */
+.settings-card {
+  @apply flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg;
+}
+.settings-card-icon {
+  @apply mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-2xl;
+}
+.settings-card-title {
+  @apply mb-1 text-lg font-bold text-slate-900;
+}
+.settings-card-desc {
+  @apply mb-5 flex-1 text-sm text-slate-500;
+}
+.settings-card-blue .settings-card-icon { @apply bg-blue-100; }
+.settings-card-emerald .settings-card-icon { @apply bg-emerald-100; }
+.settings-card-violet .settings-card-icon { @apply bg-violet-100; }
+.settings-card-sky .settings-card-icon { @apply bg-sky-100; }
+.settings-card-amber .settings-card-icon { @apply bg-amber-100; }
+.settings-card-slate .settings-card-icon { @apply bg-slate-100; }
 
 /* Billing print */
 @media print {
@@ -236,6 +320,38 @@ body {
 }
 
 .print-only { display: none; }
+
+/* Billing payment */
+.billing-payment-panel {
+  @apply mt-4 rounded-2xl border-2 border-primary/20 bg-slate-50 p-4;
+}
+.billing-payment-title {
+  @apply mb-4 text-sm font-bold uppercase tracking-wide text-slate-600;
+}
+.billing-payment-box {
+  @apply rounded-xl border border-slate-200 bg-white p-4;
+}
+.billing-payment-total {
+  @apply border-primary/30 bg-primary/5;
+}
+.billing-payment-change {
+  @apply border-emerald-300 bg-emerald-50;
+}
+.billing-payment-short {
+  @apply border-red-300 bg-red-50;
+}
+.billing-payment-short .billing-payment-value {
+  @apply text-red-600;
+}
+.billing-payment-label {
+  @apply mb-1 text-xs font-bold uppercase tracking-wide text-slate-500;
+}
+.billing-payment-value {
+  @apply text-3xl font-extrabold text-emerald-700;
+}
+.billing-payment-total .billing-payment-value {
+  @apply text-primary;
+}
 
 /* Modal overlay */
 .modal-overlay {

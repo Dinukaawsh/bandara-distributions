@@ -48,11 +48,19 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
       {loading ? (
         <p className="text-center text-sm text-slate-500 label-si">{t('පූරණය වෙමින්...', 'Loading...')}</p>
       ) : (
+        <div className="data-table-wrap custom-scrollbar">
         <table className="data-table">
+          <colgroup>
+            <col className="col-barcode" />
+            <col className="col-name" />
+            <col className="col-price" />
+            <col className="col-price" />
+            <col className="col-stock" />
+          </colgroup>
           <thead>
             <tr>
-              <th>{t('බාර්කෝඩ්', 'Barcode')}</th>
-              <th>{t('නම', 'Name')}</th>
+              <th className="text-left">{t('බාර්කෝඩ්', 'Barcode')}</th>
+              <th className="text-left">{t('නම', 'Name')}</th>
               <th className="text-right">{t('වෙළඳපොල මිල', 'Market')}</th>
               <th className="text-right">{t('අපේ මිල', 'Our Price')}</th>
               <th className="text-center">{t('තොගය', 'Stock')}</th>
@@ -61,10 +69,10 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
           <tbody>
             {products.map((p) => (
               <tr key={p.barcode}>
-                <td>{p.barcode}</td>
-                <td className="label-si font-bold">{p.name}</td>
-                <td className="text-right">Rs. {Number(p.market_price).toFixed(2)}</td>
-                <td className="text-right">Rs. {Number(p.our_price).toFixed(2)}</td>
+                <td className="font-mono text-left">{p.barcode}</td>
+                <td className="label-si font-bold text-left">{p.name}</td>
+                <td className="text-right whitespace-nowrap">Rs. {Number(p.market_price).toFixed(2)}</td>
+                <td className="text-right whitespace-nowrap">Rs. {Number(p.our_price).toFixed(2)}</td>
                 <td className="text-center">
                   <span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span>
                 </td>
@@ -72,6 +80,7 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </Modal>
   );

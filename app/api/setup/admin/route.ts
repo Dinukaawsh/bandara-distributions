@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBillingDb } from '@/lib/db';
+import { hashPassword, validatePasswordStrength } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,10 +13,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, full_name, password, counter_no } = body;
+    const { username, full_name, password, counter_no, setup_secret } = body;
+
+    if (setup_secret !== setupSecret) {
+      return NextResponse.json({ error: 'Invalid setup secret.' }, { status: 403 });
+    }
 
     if (!username || !full_name || !password || !counter_no) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
+    }
+
+    const strengthError = validatePasswordStrength(password);
+    if (strengthError) {
+      return NextResponse.json({ error: strengthError }, { status: 400 });
     }
 
     const db = await getBillingDb();
@@ -37,7 +47,7 @@ export async function POST(request: NextRequest) {
     await users.insertOne({
       username,
       full_name,
-      password,
+      password: await hashPassword(password),
       role: 'Admin',
       counter_no,
       created_at: new Date(),

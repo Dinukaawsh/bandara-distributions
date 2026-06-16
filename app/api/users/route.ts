@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
+import { hashPassword, validatePasswordStrength } from '@/lib/password';
+
+const USER_PROJECTION = {
+  projection: { password: 0 },
+};
 
 export async function GET() {
   try {
@@ -10,7 +15,7 @@ export async function GET() {
     }
 
     const db = await getBillingDb();
-    const users = await db.collection('users').find({}).toArray();
+    const users = await db.collection('users').find({}, USER_PROJECTION).toArray();
     return NextResponse.json({ users }, { status: 200 });
   } catch (error) {
     console.error('GET /api/users error:', error);
@@ -32,6 +37,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
+    const strengthError = validatePasswordStrength(password);
+    if (strengthError) {
+      return NextResponse.json({ error: strengthError }, { status: 400 });
+    }
+
     const db = await getBillingDb();
     const usersCollection = db.collection('users');
 
@@ -43,7 +53,7 @@ export async function POST(request: NextRequest) {
     await usersCollection.insertOne({
       username,
       full_name,
-      password,
+      password: await hashPassword(password),
       role,
       counter_no,
       created_at: new Date(),
@@ -70,19 +80,24 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
 
-    const db = await getBillingDb();
-    await db.collection('users').updateOne(
-      { username: old_username },
-      {
-        $set: {
-          username: new_username,
-          full_name: String(body.full_name || ''),
-          password: String(body.password || ''),
-          role: String(body.role || 'Cashier'),
-          counter_no: String(body.counter_no || 'Counter 1'),
-        },
+    const update: Record<string, string> = {
+      username: new_username,
+      full_name: String(body.full_name || ''),
+      role: String(body.role || 'Cashier'),
+      counter_no: String(body.counter_no || 'Counter 1'),
+    };
+
+    const newPassword = String(body.password || '').trim();
+    if (newPassword) {
+      const strengthError = validatePasswordStrength(newPassword);
+      if (strengthError) {
+        return NextResponse.json({ error: strengthError }, { status: 400 });
       }
-    );
+      update.password = await hashPassword(newPassword);
+    }
+
+    const db = await getBillingDb();
+    await db.collection('users').updateOne({ username: old_username }, { $set: update });
 
     return NextResponse.json({ success: true });
   } catch (error) {

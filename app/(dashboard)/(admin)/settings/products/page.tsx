@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Input, Modal, SearchBar, Select } from '@/components/ui';
+import { Alert, Button, Card, Input, Modal, SearchBar } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
@@ -32,40 +32,62 @@ export default function SettingsProductsPage() {
       {flash === 'updated' && <Alert type="success" className="mb-3">{t('යාවත්කාලීන විය!', 'Updated!')}</Alert>}
       {flash === 'deleted' && <Alert type="error" className="mb-3">{t('මකා දමන ලදී!', 'Deleted!')}</Alert>}
       <SearchBar value={search} onChange={setSearch} placeholder={t('නම හෝ බාර්කෝඩ් මඟින් සොයන්න...', 'Search by name or barcode...')} className="mb-4" />
-      <Card className="overflow-x-auto custom-scrollbar p-0">
-        <table className="data-table">
-          <thead><tr>
-            <th className="label-si">{t('බාර්කෝඩ්', 'Barcode')}</th>
-            <th className="label-si">{t('නම', 'Name')}</th>
-            <th className="text-right label-si">{t('වෙළඳපොල මිල', 'Market')}</th>
-            <th className="text-right label-si">{t('අපේ මිල', 'Our Price')}</th>
-            <th className="text-center label-si">{t('තොගය', 'Stock')}</th>
-            <th className="text-center label-si">{t('ක්‍රියා', 'Action')}</th>
-          </tr></thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.barcode}>
-                <td>{p.barcode}</td>
-                <td className="font-bold label-si">{p.name}</td>
-                <td className="text-right">Rs. {Number(p.market_price).toFixed(2)}</td>
-                <td className="text-right">Rs. {Number(p.our_price).toFixed(2)}</td>
-                <td className="text-center"><span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span></td>
-                <td className="text-center space-x-2">
-                  <Button variant="warning" className="!py-1.5 !text-xs" onClick={() => setEditProduct({ ...p })}>{t('සංස්කරණය', 'Edit')}</Button>
-                  <Button variant="danger" className="!py-1.5 !text-xs" onClick={async () => {
-                    const ok = await confirm({
-                      title: t('භාණ්ඩය මකන්න', 'Delete Product'),
-                      message: t('මකා දමන්නද?', 'Delete?'),
-                    });
-                    if (!ok) return;
-                    await fetch(`/api/products?barcode=${encodeURIComponent(p.barcode)}`, { method: 'DELETE' });
-                    setFlash('deleted'); loadProducts();
-                  }}>{t('මකන්න', 'Delete')}</Button>
-                </td>
+      <Card className="overflow-hidden p-0">
+        <div className="data-table-wrap custom-scrollbar">
+          <table className="data-table">
+            <colgroup>
+              <col className="col-barcode" />
+              <col className="col-name" />
+              <col className="col-price" />
+              <col className="col-price" />
+              <col className="col-stock" />
+              <col className="col-actions" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th className="text-left label-si">{t('බාර්කෝඩ්', 'Barcode')}</th>
+                <th className="text-left label-si">{t('නම', 'Name')}</th>
+                <th className="text-right label-si">{t('වෙළඳපොල මිල', 'Market')}</th>
+                <th className="text-right label-si">{t('අපේ මිල', 'Our Price')}</th>
+                <th className="text-center label-si">{t('තොගය', 'Stock')}</th>
+                <th className="text-center label-si">{t('ක්‍රියා', 'Action')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center text-slate-500 label-si py-8">
+                    {t('භාණ්ඩ නැත', 'No products found')}
+                  </td>
+                </tr>
+              ) : filtered.map((p) => (
+                <tr key={p.barcode}>
+                  <td className="font-mono text-left">{p.barcode}</td>
+                  <td className="font-bold label-si text-left">{p.name}</td>
+                  <td className="text-right whitespace-nowrap">Rs. {Number(p.market_price).toFixed(2)}</td>
+                  <td className="text-right whitespace-nowrap">Rs. {Number(p.our_price).toFixed(2)}</td>
+                  <td className="text-center">
+                    <span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span>
+                  </td>
+                  <td className="cell-actions">
+                    <div className="cell-actions-inner">
+                      <Button variant="warning" className="!py-1.5 !text-xs" onClick={() => setEditProduct({ ...p })}>{t('සංස්කරණය', 'Edit')}</Button>
+                      <Button variant="danger" className="!py-1.5 !text-xs" onClick={async () => {
+                        const ok = await confirm({
+                          title: t('භාණ්ඩය මකන්න', 'Delete Product'),
+                          message: t('මකා දමන්නද?', 'Delete?'),
+                        });
+                        if (!ok) return;
+                        await fetch(`/api/products?barcode=${encodeURIComponent(p.barcode)}`, { method: 'DELETE' });
+                        setFlash('deleted'); loadProducts();
+                      }}>{t('මකන්න', 'Delete')}</Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Modal open={!!editProduct} onClose={() => setEditProduct(null)} title={t('භාණ්ඩය සංස්කරණය', 'Edit Product')}

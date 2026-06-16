@@ -44,11 +44,18 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
           {t('සියලු තොග සතුටුදායකයි!', 'All stock levels are good!')}
         </p>
       ) : (
+        <div className="data-table-wrap custom-scrollbar">
         <table className="data-table">
+          <colgroup>
+            <col className="col-barcode" />
+            <col className="col-product" />
+            <col className="col-price-lg" />
+            <col className="col-stock" />
+          </colgroup>
           <thead>
             <tr>
-              <th>{t('බාර්කෝඩ්', 'Barcode')}</th>
-              <th>{t('භාණ්ඩය', 'Product')}</th>
+              <th className="text-left">{t('බාර්කෝඩ්', 'Barcode')}</th>
+              <th className="text-left">{t('භාණ්ඩය', 'Product')}</th>
               <th className="text-right">{t('මිල', 'Price')}</th>
               <th className="text-center">{t('තොගය', 'Stock')}</th>
             </tr>
@@ -56,9 +63,9 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
           <tbody>
             {products.map((p) => (
               <tr key={String(p.barcode)}>
-                <td className="font-mono">{String(p.barcode)}</td>
-                <td className="label-si font-bold">{String(p.name)}</td>
-                <td className="text-right">Rs. {Number(p.our_price).toFixed(2)}</td>
+                <td className="font-mono text-left">{String(p.barcode)}</td>
+                <td className="label-si font-bold text-left">{String(p.name)}</td>
+                <td className="text-right whitespace-nowrap">Rs. {Number(p.our_price).toFixed(2)}</td>
                 <td className="text-center">
                   <span className={Number(p.stock) <= 0 ? 'badge-danger' : 'badge-warning'}>
                     {String(p.stock)}
@@ -68,6 +75,7 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </Modal>
   );
