@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Input, Modal, SearchBar } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, Input, Modal, SearchBar } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
@@ -24,22 +24,23 @@ export default function SettingsProductsPage() {
   const [search, setSearch] = useState('');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState<ProductForm>({
-    barcode: '', name: '', market_price: '0', our_price: '0', stock: '0',
-  });
+  const [createForm, setCreateForm] = useState<ProductForm>({ barcode: '', name: '', market_price: '0', our_price: '0', stock: '0' });
   const [flash, setFlash] = useState('');
   const [createError, setCreateError] = useState('');
+  const [selectedBarcodes, setSelectedBarcodes] = useState<string[]>([]);
 
   useEffect(() => { loadProducts(); }, []);
 
   async function loadProducts() {
     const res = await fetch('/api/products?format=list');
-    if (res.ok) setProducts((await res.json()).products || []);
+    if (res.ok) {
+      setProducts((await res.json()).products || []);
+      setSelectedBarcodes([]);
+    }
   }
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) || p.barcode.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.barcode.toLowerCase().includes(search.toLowerCase()));
+  const allSelected = filtered.length > 0 && filtered.every((p) => selectedBarcodes.includes(p.barcode));
 
   const metrics = useMemo(() => {
     const total = products.length;
@@ -53,65 +54,78 @@ export default function SettingsProductsPage() {
     <div className="space-y-4">
       <div className="page-header">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="page-title label-si">{t('', '')}</h1>
-          <Button onClick={() => setShowCreate(true)}>{t('', '')}</Button>
+          <h1 className="page-title label-si">{t('Product Management', 'Product Management')}</h1>
+          <div className="flex gap-2">
+            <Button
+              variant="danger"
+              disabled={selectedBarcodes.length === 0}
+              onClick={async () => {
+                const ok = await confirm({ title: t('Delete Selected Products', 'Delete Selected Products'), message: t('Delete selected products?', 'Delete selected products?') });
+                if (!ok) return;
+                await Promise.all(selectedBarcodes.map((code) => fetch(`/api/products?barcode=${encodeURIComponent(code)}`, { method: 'DELETE' })));
+                setFlash('deleted');
+                loadProducts();
+              }}
+            >
+              {t('Delete Selected', 'Delete Selected')}
+            </Button>
+            <Button onClick={() => setShowCreate(true)}>{t('Add Product', 'Add Product')}</Button>
+          </div>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('', '')}</p><p className="dashboard-metric-value">{metrics.total}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('', '')}</p><p className="dashboard-metric-value">{metrics.lowStock}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('', '')}</p><p className="dashboard-metric-value">{metrics.noStock}</p></Card>
-        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('', '')}</p><p className="dashboard-metric-value">LKR {metrics.avgPrice.toFixed(2)}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Total Products', 'Total Products')}</p><p className="dashboard-metric-value">{metrics.total}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Low Stock', 'Low Stock')}</p><p className="dashboard-metric-value">{metrics.lowStock}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Out of Stock', 'Out of Stock')}</p><p className="dashboard-metric-value">{metrics.noStock}</p></Card>
+        <Card className="dashboard-metric-card"><p className="dashboard-metric-label">{t('Avg Price', 'Avg Price')}</p><p className="dashboard-metric-value">LKR {metrics.avgPrice.toFixed(2)}</p></Card>
       </div>
 
-      {flash === 'updated' && <Alert type="success" className="mb-3">{t('', '')}</Alert>}
-      {flash === 'deleted' && <Alert type="error" className="mb-3">{t('', '')}</Alert>}
-      {flash === 'created' && <Alert type="success" className="mb-3">{t('', '')}</Alert>}
-      {createError && <Alert type="error" className="mb-3">{createError}</Alert>}
+      {flash === 'updated' && <Alert type="success">{t('Updated!', 'Updated!')}</Alert>}
+      {flash === 'deleted' && <Alert type="error">{t('Deleted!', 'Deleted!')}</Alert>}
+      {flash === 'created' && <Alert type="success">{t('Product added!', 'Product added!')}</Alert>}
+      {createError && <Alert type="error">{createError}</Alert>}
 
-      <SearchBar value={search} onChange={setSearch} placeholder={t('', '')} className="mb-2" />
+      <SearchBar value={search} onChange={setSearch} placeholder={t('Search by name or barcode...', 'Search by name or barcode...')} className="mb-2" />
+
       <Card className="overflow-hidden p-0">
         <div className="data-table-wrap custom-scrollbar">
           <table className="data-table">
-            <colgroup>
-              <col className="col-barcode" />
-              <col className="col-name" />
-              <col className="col-price" />
-              <col className="col-price" />
-              <col className="col-stock" />
-              <col className="col-actions" />
-            </colgroup>
             <thead>
               <tr>
-                <th className="text-left label-si">{t('', '')}</th>
-                <th className="text-left label-si">{t('', '')}</th>
-                <th className="text-right label-si">{t('', '')}</th>
-                <th className="text-right label-si">{t('', '')}</th>
-                <th className="text-center label-si">{t('', '')}</th>
-                <th className="text-center label-si">{t('', '')}</th>
+                <th className="text-center"><Checkbox checked={allSelected} onChange={(checked) => {
+                  const keys = filtered.map((p) => p.barcode);
+                  setSelectedBarcodes(checked ? Array.from(new Set([...selectedBarcodes, ...keys])) : selectedBarcodes.filter((k) => !keys.includes(k)));
+                }} /></th>
+                <th className="text-left">{t('Barcode', 'Barcode')}</th>
+                <th className="text-left">{t('Name', 'Name')}</th>
+                <th className="text-right">{t('Market', 'Market')}</th>
+                <th className="text-right">{t('Our Price', 'Our Price')}</th>
+                <th className="text-center">{t('Stock', 'Stock')}</th>
+                <th className="text-center">{t('Action', 'Action')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-slate-500 label-si py-8">{t('', '')}</td></tr>
+                <tr><td colSpan={7} className="text-center text-slate-500 py-8">{t('No products found', 'No products found')}</td></tr>
               ) : filtered.map((p) => (
                 <tr key={p.barcode}>
-                  <td className="font-mono text-left">{p.barcode}</td>
-                  <td className="font-bold label-si text-left">{p.name}</td>
-                  <td className="text-right whitespace-nowrap">LKR {Number(p.market_price).toFixed(2)}</td>
-                  <td className="text-right whitespace-nowrap">LKR {Number(p.our_price).toFixed(2)}</td>
+                  <td className="text-center"><Checkbox checked={selectedBarcodes.includes(p.barcode)} onChange={(checked) => setSelectedBarcodes((prev) => checked ? [...prev, p.barcode] : prev.filter((v) => v !== p.barcode))} /></td>
+                  <td className="font-mono">{p.barcode}</td>
+                  <td className="font-bold label-si">{p.name}</td>
+                  <td className="text-right">LKR {Number(p.market_price).toFixed(2)}</td>
+                  <td className="text-right">LKR {Number(p.our_price).toFixed(2)}</td>
                   <td className="text-center"><span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span></td>
                   <td className="cell-actions">
                     <div className="cell-actions-inner">
-                      <Button variant="warning" className="!py-1.5 !text-xs" onClick={() => setEditProduct({ ...p })}>{t('', '')}</Button>
+                      <Button variant="warning" className="!py-1.5 !text-xs" onClick={() => setEditProduct({ ...p })}>{t('Edit', 'Edit')}</Button>
                       <Button variant="danger" className="!py-1.5 !text-xs" onClick={async () => {
-                        const ok = await confirm({ title: t('', ''), message: t('', '') });
+                        const ok = await confirm({ title: t('Delete Product', 'Delete Product'), message: t('Delete this product?', 'Delete this product?') });
                         if (!ok) return;
                         await fetch(`/api/products?barcode=${encodeURIComponent(p.barcode)}`, { method: 'DELETE' });
                         setFlash('deleted');
                         loadProducts();
-                      }}>{t('', '')}</Button>
+                      }}>{t('Delete', 'Delete')}</Button>
                     </div>
                   </td>
                 </tr>
@@ -121,58 +135,53 @@ export default function SettingsProductsPage() {
         </div>
       </Card>
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('', '')} footerSplit footer={<>
-        <Button variant="secondary" className="w-full" onClick={() => setShowCreate(false)}>{t('', '')}</Button>
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('Add New Product', 'Add New Product')} size="lg" footerSplit footer={<>
+        <Button variant="secondary" className="w-full" onClick={() => setShowCreate(false)}>{t('Close', 'Close')}</Button>
         <Button className="w-full" onClick={async () => {
           setCreateError('');
-          const payload = {
+          const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             p_barcode: createForm.barcode,
             p_name: createForm.name,
             p_market: createForm.market_price,
             p_our: createForm.our_price,
             p_stock: createForm.stock,
-          };
-          const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          })});
           const data = await res.json();
-          if (!res.ok) {
-            setCreateError(String(data.error || t('දෝෂයක් ඇත', 'Something went wrong')));
-            return;
-          }
+          if (!res.ok) { setCreateError(String(data.error || 'Something went wrong')); return; }
           setShowCreate(false);
           setCreateForm({ barcode: '', name: '', market_price: '0', our_price: '0', stock: '0' });
           setFlash('created');
           loadProducts();
-        }}>{t('', '')}</Button>
+        }}>{t('Add', 'Add')}</Button>
       </>}>
-        <div className="space-y-3">
-          <Input label={t('', '')} value={createForm.barcode} onChange={(e) => setCreateForm((f) => ({ ...f, barcode: e.target.value }))} />
-          <Input label={t('', '')} value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} />
-          <Input label={t('', '')} type="number" step="any" value={createForm.market_price} onChange={(e) => setCreateForm((f) => ({ ...f, market_price: e.target.value }))} />
-          <Input label={t('', '')} type="number" step="any" value={createForm.our_price} onChange={(e) => setCreateForm((f) => ({ ...f, our_price: e.target.value }))} />
-          <Input label={t('', '')} type="number" value={createForm.stock} onChange={(e) => setCreateForm((f) => ({ ...f, stock: e.target.value }))} />
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input label={t('Barcode', 'Barcode')} value={createForm.barcode} onChange={(e) => setCreateForm((f) => ({ ...f, barcode: e.target.value }))} />
+          <Input label={t('Name', 'Name')} value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} />
+          <Input label={t('Market Price', 'Market Price')} type="number" step="any" value={createForm.market_price} onChange={(e) => setCreateForm((f) => ({ ...f, market_price: e.target.value }))} />
+          <Input label={t('Our Price', 'Our Price')} type="number" step="any" value={createForm.our_price} onChange={(e) => setCreateForm((f) => ({ ...f, our_price: e.target.value }))} />
+          <Input label={t('Stock', 'Stock')} type="number" value={createForm.stock} onChange={(e) => setCreateForm((f) => ({ ...f, stock: e.target.value }))} />
         </div>
       </Modal>
 
-      <Modal open={!!editProduct} onClose={() => setEditProduct(null)} title={t('', '')} footerSplit footer={<>
-        <Button variant="secondary" className="w-full" onClick={() => setEditProduct(null)}>{t('', '')}</Button>
+      <Modal open={!!editProduct} onClose={() => setEditProduct(null)} title={t('Edit Product', 'Edit Product')} size="lg" footerSplit footer={<>
+        <Button variant="secondary" className="w-full" onClick={() => setEditProduct(null)}>{t('Close', 'Close')}</Button>
         <Button className="w-full" onClick={async () => {
           if (!editProduct) return;
-          await fetch('/api/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ barcode: editProduct.barcode, name: editProduct.name, market_price: editProduct.market_price, our_price: editProduct.our_price, stock: editProduct.stock }) });
+          await fetch('/api/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editProduct) });
           setEditProduct(null);
           setFlash('updated');
           loadProducts();
-        }}>{t('', '')}</Button>
+        }}>{t('Save', 'Save')}</Button>
       </>}>
         {editProduct && (
-          <div className="space-y-3">
-            <Input label={t('', '')} value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} />
-            <Input label={t('', '')} type="number" step="any" value={editProduct.market_price} onChange={(e) => setEditProduct({ ...editProduct, market_price: Number(e.target.value) })} />
-            <Input label={t('', '')} type="number" step="any" value={editProduct.our_price} onChange={(e) => setEditProduct({ ...editProduct, our_price: Number(e.target.value) })} />
-            <Input label={t('', '')} type="number" value={editProduct.stock} onChange={(e) => setEditProduct({ ...editProduct, stock: Number(e.target.value) })} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input label={t('Name', 'Name')} value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} />
+            <Input label={t('Market Price', 'Market Price')} type="number" step="any" value={editProduct.market_price} onChange={(e) => setEditProduct({ ...editProduct, market_price: Number(e.target.value) })} />
+            <Input label={t('Our Price', 'Our Price')} type="number" step="any" value={editProduct.our_price} onChange={(e) => setEditProduct({ ...editProduct, our_price: Number(e.target.value) })} />
+            <Input label={t('Stock', 'Stock')} type="number" value={editProduct.stock} onChange={(e) => setEditProduct({ ...editProduct, stock: Number(e.target.value) })} />
           </div>
         )}
       </Modal>
     </div>
   );
 }
-

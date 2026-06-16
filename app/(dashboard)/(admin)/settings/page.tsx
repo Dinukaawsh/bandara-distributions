@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { HiOutlineArchiveBox, HiOutlineBuildingStorefront, HiOutlineChartBarSquare, HiOutlineCog6Tooth, HiOutlineCloudArrowDown, HiOutlineExclamationTriangle, HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineArchiveBox, HiOutlineBuildingStorefront, HiOutlineChartBarSquare, HiOutlineCloudArrowDown, HiOutlineExclamationTriangle, HiOutlineUsers } from 'react-icons/hi2';
 import { ProductsViewModal } from '@/components/modals/ProductsViewModal';
 import { StockAlertsViewModal } from '@/components/modals/StockAlertsViewModal';
 import { useLang } from '@/hooks/useLang';
@@ -19,10 +19,10 @@ export default function SettingsPage() {
       key: 'products',
       icon: <HiOutlineArchiveBox />,
       color: 'settings-card-blue',
-      title: t('????? ?????????', 'Manage Products'),
-      desc: t('????? ?????, ???????? ?? ????????.', 'View, edit and delete products.'),
-      viewBtn: t('????? ?????', 'View Items'),
-      manageBtn: t('?????????', 'Manage'),
+      title: t('Product Management', 'Manage Products'),
+      desc: t('View, edit and delete products.', 'View, edit and delete products.'),
+      viewBtn: t('View Items', 'View Items'),
+      manageBtn: t('Manage', 'Manage'),
       viewVariant: 'btn-primary',
       manageVariant: 'btn-secondary',
       onView: () => setShowProducts(true),
@@ -32,9 +32,9 @@ export default function SettingsPage() {
       key: 'store',
       icon: <HiOutlineBuildingStorefront />,
       color: 'settings-card-emerald',
-      title: t('???? ??????', 'Store Details'),
-      desc: t('??????? ???????? ?? ??, ?????? ?? ?????? ????.', 'Shop name, address and phone on invoice.'),
-      manageBtn: t('?????????', 'Manage'),
+      title: t('Store Details', 'Store Details'),
+      desc: t('Shop name, address and phone on invoice.', 'Shop name, address and phone on invoice.'),
+      manageBtn: t('Manage', 'Manage'),
       manageVariant: 'btn-secondary',
       manageHref: '/manage-store',
     },
@@ -42,9 +42,9 @@ export default function SettingsPage() {
       key: 'users',
       icon: <HiOutlineUsers />,
       color: 'settings-card-violet',
-      title: t('??????? ??????', 'User Accounts'),
-      desc: t('Cashier ?? ???? ????? ?? ?????????.', 'Add and manage cashier accounts.'),
-      manageBtn: t('?????????', 'Manage'),
+      title: t('User Accounts', 'User Accounts'),
+      desc: t('Add and manage user accounts.', 'Add and manage user accounts.'),
+      manageBtn: t('Manage', 'Manage'),
       manageVariant: 'btn-success',
       manageHref: '/manage-users',
     },
@@ -52,9 +52,9 @@ export default function SettingsPage() {
       key: 'reports',
       icon: <HiOutlineChartBarSquare />,
       color: 'settings-card-sky',
-      title: t('???????? ??????', 'Sales Reports'),
-      desc: t('????? ???????? ?? ??? ??????.', 'Monthly sales and profit reports.'),
-      manageBtn: t('?????? ?????', 'View Reports'),
+      title: t('Sales Reports', 'Sales Reports'),
+      desc: t('Monthly sales and profit reports.', 'Monthly sales and profit reports.'),
+      manageBtn: t('View Reports', 'View Reports'),
       manageVariant: 'btn-secondary',
       manageHref: '/sales-report',
     },
@@ -62,10 +62,10 @@ export default function SettingsPage() {
       key: 'stock',
       icon: <HiOutlineExclamationTriangle />,
       color: 'settings-card-amber',
-      title: t('??? ??????????', 'Stock Alerts'),
-      desc: t('??? ??? ??? ????? ?????.', 'View low stock items.'),
-      viewBtn: t('????? ?????', 'View Items'),
-      manageBtn: t('?????? ????', 'Open Page'),
+      title: t('Stock Alerts', 'Stock Alerts'),
+      desc: t('View low stock items.', 'View low stock items.'),
+      viewBtn: t('View Items', 'View Items'),
+      manageBtn: t('Open Page', 'Open Page'),
       viewVariant: 'btn-danger',
       manageVariant: 'btn-secondary',
       onView: () => setShowStock(true),
@@ -75,9 +75,9 @@ export default function SettingsPage() {
       key: 'backup',
       icon: <HiOutlineCloudArrowDown />,
       color: 'settings-card-slate',
-      title: t('???? ?????', 'Backup'),
-      desc: t('?????? ???? JSON ??? ???? ?????.', 'Download system data as JSON.'),
-      manageBtn: t('Backup ???????', 'Get Backup'),
+      title: t('Backup', 'Backup'),
+      desc: t('Download system data as JSON.', 'Download system data as JSON.'),
+      manageBtn: t('Get Backup', 'Get Backup'),
       manageVariant: 'btn-warning',
       external: true,
       manageHref: '/api/backup',
@@ -87,8 +87,8 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="page-header mb-8">
-        <h1 className="page-title label-si">{t('?????? ???????', 'System Settings')}</h1>
-        <p className="page-subtitle label-si">{t('?????, ???????????, ?????? ?? ????? ?????????.', 'Manage products, users, reports and backups.')}</p>
+        <h1 className="page-title label-si">{t('System Settings', 'System Settings')}</h1>
+        <p className="page-subtitle label-si">{t('Manage products, users, reports and backups.', 'Manage products, users, reports and backups.')}</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

@@ -146,6 +146,26 @@ export default function BillingPage() {
       .map(([barcodeKey, row]) => ({ barcode: barcodeKey, name: row.name, qty: row.qty }))
       .sort((a, b) => b.qty - a.qty)[0] || null;
   }, [adminBills]);
+  const updateItemQty = useCallback((barcodeKey: string, delta: number) => {
+    setBillItems((prev) =>
+      prev.flatMap((item) => {
+        if (item.barcode !== barcodeKey) return [item];
+        const nextQty = item.qty + delta;
+        if (nextQty <= 0) return [];
+        const unitPrice = item.ourPrice;
+        const unitProfit = item.qty > 0 ? item.totalProfit / item.qty : 0;
+        return [{
+          ...item,
+          qty: nextQty,
+          total: unitPrice * nextQty,
+          totalProfit: unitProfit * nextQty,
+        }];
+      })
+    );
+  }, []);
+  const removeItem = useCallback((barcodeKey: string) => {
+    setBillItems((prev) => prev.filter((item) => item.barcode !== barcodeKey));
+  }, []);
 
   const addProductToBill = useCallback((code: string, quantity = parseFloat(qty) || 1) => {
     const trimmed = code.trim();
@@ -431,16 +451,26 @@ export default function BillingPage() {
                   <thead>
                     <tr>
                       <th className="text-left label-si">{ln.item_title}</th>
+                      <th className="text-center label-si">{t('Qty', 'Qty')}</th>
                       <th className="text-right label-si">{ln.our_price}</th>
                       <th className="text-right label-si">{ln.total_col}</th>
+                      <th className="text-center label-si">{t('Action', 'Action')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {billItems.map((item) => (
                       <tr key={item.barcode}>
-                        <td className="font-bold label-si">{item.qty} x {item.name}</td>
+                        <td className="font-bold label-si">{item.name}</td>
+                        <td className="text-center">{item.qty}</td>
                         <td className="text-right">{item.ourPrice.toFixed(2)}</td>
                         <td className="text-right font-bold">{item.total.toFixed(2)}</td>
+                        <td className="cell-actions">
+                          <div className="cell-actions-inner">
+                            <Button variant="secondary" className="!py-1 !text-xs" onClick={() => updateItemQty(item.barcode, -1)}>-</Button>
+                            <Button variant="secondary" className="!py-1 !text-xs" onClick={() => updateItemQty(item.barcode, 1)}>+</Button>
+                            <Button variant="danger" className="!py-1 !text-xs" onClick={() => removeItem(item.barcode)}>{t('Remove', 'Remove')}</Button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
