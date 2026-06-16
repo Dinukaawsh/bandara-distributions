@@ -9,6 +9,7 @@ export type SessionUser = {
   role: string;
   full_name: string;
   counter_no: string;
+  availability_status?: 'available' | 'busy';
   lang: Lang;
 };
 

@@ -18,6 +18,7 @@ export function AdminTopbar({ user, lang, onLangChange, onMenuClick, title }: Ad
   const router = useRouter();
   const { confirm } = useDialog();
   const isAdmin = user.role.toLowerCase() === 'admin';
+  const isBusy = user.availability_status === 'busy';
 
   async function handleLogout() {
     const ok = await confirm({
@@ -46,7 +47,7 @@ export function AdminTopbar({ user, lang, onLangChange, onMenuClick, title }: Ad
 
   return (
     <header className="admin-topbar no-print">
-      <div className="flex items-center gap-3">
+      <div className="admin-topbar-left">
         <button
           type="button"
           className="btn-ghost !px-2 lg:hidden"
@@ -55,24 +56,29 @@ export function AdminTopbar({ user, lang, onLangChange, onMenuClick, title }: Ad
         >
           ☰
         </button>
-        <div>
-          <h1 className="text-base font-bold text-black label-si">
+        <div className="min-w-0">
+          <h1 className="text-base font-bold text-black label-si truncate">
             {title || (lang === 'si' ? 'බිල්පත් පද්ධතිය' : 'Billing System')}
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 truncate">
             {user.full_name} · {user.counter_no}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="admin-topbar-right">
         <span className={isAdmin ? 'badge-admin' : 'badge-cashier'}>
           {isAdmin ? (lang === 'si' ? 'පරිපාලක' : 'Admin') : (lang === 'si' ? 'කැෂියර්' : 'Cashier')}
         </span>
-        <div className="w-28">
+        {!isAdmin && (
+          <span className={isBusy ? 'badge-warning' : 'badge-stock'}>
+            {isBusy ? (lang === 'si' ? 'කාර්යබහුල' : 'Busy') : (lang === 'si' ? 'ලබා ගත හැක' : 'Available')}
+          </span>
+        )}
+        <div className="w-full sm:w-28">
           <LanguageSelect value={lang} onChange={changeLang} />
         </div>
-        <Button variant="danger" onClick={handleLogout} className="!py-2 !text-xs">
+        <Button variant="danger" onClick={handleLogout} className="w-full sm:w-auto !py-2 !text-xs">
           {lang === 'si' ? 'ලොග් අවුට්' : 'Logout'}
         </Button>
       </div>

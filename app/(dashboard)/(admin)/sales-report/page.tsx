@@ -103,17 +103,24 @@ export default function SalesReportPage() {
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Card className="!bg-primary !text-white text-center">
           <p className="label-si">{t('මුළු විකුණුම්', 'Total Sales')}</p>
-          <p className="text-2xl font-bold">Rs. {Number(stats.total_sales).toFixed(2)}</p>
+          <p className="text-2xl font-bold">LKR {Number(stats.total_sales).toFixed(2)}</p>
         </Card>
         <Card className="!bg-emerald-600 !text-white text-center">
           <p className="label-si">{t('ලාභය', 'Profit')}</p>
-          <p className="text-2xl font-bold">Rs. {Number(stats.total_profit).toFixed(2)}</p>
+          <p className="text-2xl font-bold">LKR {Number(stats.total_profit).toFixed(2)}</p>
         </Card>
         <Card className="!bg-slate-800 !text-white text-center">
           <p className="label-si">{t('බිල්පත්', 'Bills')}</p>
           <p className="text-2xl font-bold">{stats.total_bills}</p>
         </Card>
       </div>
+
+      <Alert type="info" className="mb-4 label-si">
+        {t(
+          'ලාභය ගණනය කරන්නේ එක් එක් භාණ්ඩයට (අපේ මිල - පිරිවැය) × ප්‍රමාණය ලෙසයි. වාර්තාවේ මුළු ලාභය = සියලු බිල් වල ලාභ එකතුව.',
+          'Profit is calculated per item as (selling price - cost price) x quantity. Total report profit is the sum of profit across all bills.'
+        )}
+      </Alert>
 
       <Card className="overflow-hidden p-0">
         <div className="data-table-wrap custom-scrollbar">
@@ -142,10 +149,10 @@ export default function SalesReportPage() {
                   <td>{String(o.bill_no)}</td>
                   <td className="label-si">{String(o.cashier_name)}</td>
                   <td>{String(o.counter_no)}</td>
-                  <td className="text-right">Rs. {Number(o.total_amount).toFixed(2)}</td>
-                  <td className="text-right">Rs. {Number(o.cash_paid || 0).toFixed(2)}</td>
-                  <td className="text-right">Rs. {Number(o.change_given || 0).toFixed(2)}</td>
-                  <td className="text-right">Rs. {Number(o.total_profit).toFixed(2)}</td>
+                  <td className="text-right">LKR {Number(o.total_amount).toFixed(2)}</td>
+                  <td className="text-right">LKR {Number(o.cash_paid || 0).toFixed(2)}</td>
+                  <td className="text-right">LKR {Number(o.change_given || 0).toFixed(2)}</td>
+                  <td className="text-right">LKR {Number(o.total_profit).toFixed(2)}</td>
                   <td>{new Date(String(o.created_at)).toLocaleString()}</td>
                 </tr>
               ))}
@@ -169,3 +176,4 @@ export default function SalesReportPage() {
     </div>
   );
 }
+

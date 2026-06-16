@@ -284,21 +284,59 @@ export default function BillingPage() {
     <div>
       {canBill && user && (
         <div className="cashier-banner no-print mb-4">
-          <div>
-            <p className="cashier-banner-label label-si">{ln.cashier_label}</p>
-            <p className="cashier-banner-value label-si">{user.full_name}</p>
+          <div className="cashier-banner-grid">
+            <div>
+              <p className="cashier-banner-label label-si">{ln.cashier_label}</p>
+              <p className="cashier-banner-value label-si">{user.full_name}</p>
+            </div>
+            <div>
+              <p className="cashier-banner-label label-si">{ln.counter_label}</p>
+              <p className="cashier-banner-value">{user.counter_no}</p>
+            </div>
+            <div>
+              <p className="cashier-banner-label label-si">{ln.session_no}</p>
+              <p className="cashier-banner-value">#{customerSession}</p>
+            </div>
+            <div>
+              <p className="cashier-banner-label label-si">{t('තත්වය', 'Status')}</p>
+              <span className={user.availability_status === 'busy' ? 'badge-warning' : 'badge-stock'}>
+                {user.availability_status === 'busy' ? ln.status_busy : ln.status_available}
+              </span>
+            </div>
           </div>
-          <div>
-            <p className="cashier-banner-label label-si">{ln.counter_label}</p>
-            <p className="cashier-banner-value">{user.counter_no}</p>
+          <div className="cashier-banner-actions">
+            <Button
+              variant={user.availability_status === 'busy' ? 'success' : 'secondary'}
+              className="w-full sm:w-auto"
+              onClick={async () => {
+                const res = await fetch('/api/users/status', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: 'available' }),
+                });
+                if (res.ok) window.location.reload();
+              }}
+            >
+              {ln.set_available}
+            </Button>
+            <Button
+              variant={user.availability_status === 'busy' ? 'secondary' : 'warning'}
+              className="w-full sm:w-auto"
+              onClick={async () => {
+                const res = await fetch('/api/users/status', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: 'busy' }),
+                });
+                if (res.ok) window.location.reload();
+              }}
+            >
+              {ln.set_busy}
+            </Button>
+            <Button variant="secondary" onClick={startNewCustomer} className="w-full sm:w-auto">
+              {ln.new_customer}
+            </Button>
           </div>
-          <div>
-            <p className="cashier-banner-label label-si">{ln.session_no}</p>
-            <p className="cashier-banner-value">#{customerSession}</p>
-          </div>
-          <Button variant="secondary" onClick={startNewCustomer} className="ml-auto">
-            {ln.new_customer}
-          </Button>
         </div>
       )}
 
@@ -412,7 +450,7 @@ export default function BillingPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="billing-payment-box billing-payment-total">
                     <p className="billing-payment-label label-si">{ln.total}</p>
-                    <p className="billing-payment-value">Rs. {grandTotal.toFixed(2)}</p>
+                    <p className="billing-payment-value">LKR {grandTotal.toFixed(2)}</p>
                   </div>
                   <div className="billing-payment-box">
                     <Input
@@ -434,8 +472,8 @@ export default function BillingPage() {
                       {cashPaid === ''
                         ? '—'
                         : amountShort > 0
-                          ? `Rs. ${amountShort.toFixed(2)}`
-                          : `Rs. ${changeDue.toFixed(2)}`}
+                          ? `LKR ${amountShort.toFixed(2)}`
+                          : `LKR ${changeDue.toFixed(2)}`}
                     </p>
                   </div>
                 </div>
@@ -447,6 +485,48 @@ export default function BillingPage() {
                 </div>
               </div>
             )}
+          </Card>
+        )}
+
+        {!canBill && (
+          <Card className="border-t-4 border-t-primary">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-extrabold label-si">{store.store_name}</h2>
+              <p className="text-sm text-slate-600 label-si">{store.address}<br />{store.phone}</p>
+            </div>
+
+            <Alert type="info" className="mb-4 label-si">
+              {t('Admin භූමිකාවට බිල්පත් සම්පූර්ණ කිරීම අක්‍රියයි.', 'Billing checkout is disabled for Admin role.')}
+            </Alert>
+
+            <div className="grid gap-3 sm:grid-cols-3 mb-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('භාණ්ඩ ගණන', 'Products')}</p>
+                <p className="text-2xl font-extrabold text-primary">{Object.keys(productsDb).length}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('දිනය', 'Date')}</p>
+                <p className="text-lg font-extrabold text-slate-800">{billDate}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{t('වේලාව', 'Time')}</p>
+                <p className="text-lg font-extrabold text-slate-800">{billTime}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4">
+              <p className="mb-3 text-sm font-semibold label-si">
+                {t('ඔබට කළ හැකි දේ:', 'What you can do from here:')}
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button variant="secondary" onClick={() => router.push('/settings/products')}>
+                  {t('භාණ්ඩ කළමනාකරණයට යන්න', 'Go to Product Management')}
+                </Button>
+                <Button variant="secondary" onClick={() => router.push('/sales-report')}>
+                  {t('විකුණුම් වාර්තාවට යන්න', 'Go to Sales Report')}
+                </Button>
+              </div>
+            </div>
           </Card>
         )}
       </div>
@@ -535,3 +615,4 @@ export default function BillingPage() {
     </div>
   );
 }
+

@@ -68,6 +68,13 @@ const words: Record<Lang, Record<string, string>> = {
     filter_date_to: 'දිනය දක්වා',
     all: 'සියල්ල',
     cashier_summary: 'කැෂියර් සාරාංශය',
+    status_available: 'ලබා ගත හැක',
+    status_busy: 'කාර්යබහුල / ලබා නැත',
+    set_available: 'ලබා ගත හැකි ලෙස සලකුණු කරන්න',
+    set_busy: 'කාර්යබහුල ලෙස සලකුණු කරන්න',
+    admins_section: 'පරිපාලකයින්',
+    cashiers_section: 'කැෂියර්වරු',
+    counter_taken: 'මෙම කවුන්ටරය දැනටමත් භාවිතයේ පවතී.',
   },
   en: {
     billing_system: 'Billing System',
@@ -134,6 +141,13 @@ const words: Record<Lang, Record<string, string>> = {
     filter_date_to: 'To Date',
     all: 'All',
     cashier_summary: 'Cashier Summary',
+    status_available: 'Available',
+    status_busy: 'Busy / Unavailable',
+    set_available: 'Mark as Available',
+    set_busy: 'Mark as Busy',
+    admins_section: 'Administrators',
+    cashiers_section: 'Cashiers',
+    counter_taken: 'This counter is already in use.',
   },
 };
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionCookieName, verifyToken } from '@/lib/jwt';
 
 const PUBLIC_PATHS = ['/login', '/setup', '/setup/admin', '/admin/login'];
-const ADMIN_PATHS = ['/settings', '/manage-store', '/manage-users', '/sales-report', '/stock-alerts'];
+const ADMIN_PATHS = ['/dashboard', '/settings', '/manage-store', '/manage-users', '/sales-report', '/stock-alerts'];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

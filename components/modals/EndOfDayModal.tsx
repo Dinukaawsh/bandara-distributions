@@ -64,8 +64,8 @@ export function EndOfDayModal({ open, report, onClose, onPrint }: EndOfDayModalP
         </div>
 
         <div className="rounded-lg border border-border bg-slate-50 p-4 grid gap-2 sm:grid-cols-3">
-          <p><strong>{t('මුළු විකුණුම්', 'Total Sales')}:</strong> Rs. {Number(report.summary.total_amount).toFixed(2)}</p>
-          <p><strong>{t('මුළු ලාභය', 'Total Profit')}:</strong> Rs. {Number(report.summary.total_profit).toFixed(2)}</p>
+          <p><strong>{t('මුළු විකුණුම්', 'Total Sales')}:</strong> LKR {Number(report.summary.total_amount).toFixed(2)}</p>
+          <p><strong>{t('මුළු ලාභය', 'Total Profit')}:</strong> LKR {Number(report.summary.total_profit).toFixed(2)}</p>
           <p><strong>{t('බිල්පත්', 'Bills')}:</strong> {report.summary.total_bills ?? report.bills.length}</p>
         </div>
 
@@ -86,8 +86,8 @@ export function EndOfDayModal({ open, report, onClose, onPrint }: EndOfDayModalP
                   <tr key={c.counter_no}>
                     <td>{c.counter_no}</td>
                     <td className="text-right">{c.bills ?? '—'}</td>
-                    <td className="text-right">Rs. {Number(c.amount).toFixed(2)}</td>
-                    <td className="text-right">Rs. {Number(c.profit || 0).toFixed(2)}</td>
+                    <td className="text-right">LKR {Number(c.amount).toFixed(2)}</td>
+                    <td className="text-right">LKR {Number(c.profit || 0).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -114,8 +114,8 @@ export function EndOfDayModal({ open, report, onClose, onPrint }: EndOfDayModalP
                     <td className="label-si">{c.cashier_name}</td>
                     <td>{c.counter_no}</td>
                     <td className="text-right">{c.bills ?? '—'}</td>
-                    <td className="text-right">Rs. {Number(c.amount).toFixed(2)}</td>
-                    <td className="text-right">Rs. {Number(c.profit || 0).toFixed(2)}</td>
+                    <td className="text-right">LKR {Number(c.amount).toFixed(2)}</td>
+                    <td className="text-right">LKR {Number(c.profit || 0).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -157,3 +157,4 @@ export function EndOfDayModal({ open, report, onClose, onPrint }: EndOfDayModalP
     </Modal>
   );
 }
+

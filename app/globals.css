@@ -278,10 +278,16 @@ body {
   @apply flex min-h-screen flex-1 flex-col lg:ml-64;
 }
 .admin-topbar {
-  @apply sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/90 px-4 shadow-sm backdrop-blur-md lg:px-6;
+  @apply sticky top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur-md lg:px-6;
+}
+.admin-topbar-left {
+  @apply flex min-w-0 flex-1 items-center gap-3;
+}
+.admin-topbar-right {
+  @apply flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end;
 }
 .admin-content {
-  @apply flex-1 overflow-auto p-4 lg:p-6;
+  @apply flex-1 overflow-auto p-3 sm:p-4 lg:p-6;
 }
 
 /* Settings cards */
@@ -355,13 +361,19 @@ body {
 
 /* Cashier banner */
 .cashier-banner {
-  @apply flex flex-wrap items-center gap-6 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4;
+  @apply flex flex-col gap-4 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 sm:px-5;
+}
+.cashier-banner-grid {
+  @apply grid grid-cols-2 gap-4 sm:grid-cols-4;
+}
+.cashier-banner-actions {
+  @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center;
 }
 .cashier-banner-label {
   @apply text-[10px] font-bold uppercase tracking-widest text-slate-500;
 }
 .cashier-banner-value {
-  @apply text-lg font-extrabold text-slate-900;
+  @apply text-base font-extrabold text-slate-900 sm:text-lg;
 }
 
 /* Bill receipt */
@@ -380,5 +392,81 @@ body {
   @apply w-full max-w-lg rounded-xl bg-card shadow-2xl;
 }
 .modal-footer-split {
-  @apply grid grid-cols-2 gap-3;
+  @apply grid grid-cols-1 gap-3 sm:grid-cols-2;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .billing-payment-panel .grid {
+    grid-template-columns: 1fr !important;
+  }
+  .billing-payment-value {
+    font-size: 1.75rem;
+  }
+  .auth-card {
+    padding: 1.5rem;
+  }
+  .settings-card {
+    padding: 1.25rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 17rem;
+  }
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* Dashboard visuals */
+.dashboard-metric-card {
+  @apply rounded-2xl border border-slate-200 bg-white;
+}
+.dashboard-metric-label {
+  @apply text-xs font-bold uppercase tracking-wide text-slate-500;
+  font-family: var(--font-noto-sinhala), var(--font-geist-sans), sans-serif;
+}
+.dashboard-metric-value {
+  @apply mt-1 text-2xl font-extrabold text-slate-900;
+}
+.dashboard-bar-row {
+  @apply grid grid-cols-[88px_1fr_110px] items-center gap-2;
+}
+.dashboard-bar-label {
+  @apply text-xs font-semibold text-slate-600;
+}
+.dashboard-bar-track {
+  @apply h-2 rounded-full bg-slate-200;
+}
+.dashboard-bar-fill {
+  @apply h-full rounded-full bg-primary;
+}
+.dashboard-bar-fill-alt {
+  @apply bg-emerald-600;
+}
+.dashboard-bar-value {
+  @apply text-right text-xs font-semibold text-slate-700;
+}
+.dashboard-status-row {
+  @apply flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2;
+}
+.dashboard-summary-row {
+  @apply flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2;
+}
+
+@media (max-width: 640px) {
+  .dashboard-bar-row {
+    grid-template-columns: 72px 1fr 80px;
+  }
 }

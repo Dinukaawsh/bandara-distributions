@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { getBillingDb } from '@/lib/db';
 import { hashPassword, validatePasswordStrength } from '@/lib/password';
+import { validateUserAssignment } from '@/lib/user-validation';
 
 const USER_PROJECTION = {
   projection: { password: 0 },
@@ -16,7 +17,15 @@ export async function GET() {
 
     const db = await getBillingDb();
     const users = await db.collection('users').find({}, USER_PROJECTION).toArray();
-    return NextResponse.json({ users }, { status: 200 });
+    return NextResponse.json({
+      users: users.map((u) => ({
+        username: u.username,
+        full_name: u.full_name,
+        role: u.role,
+        counter_no: u.counter_no,
+        availability_status: u.availability_status === 'busy' ? 'busy' : 'available',
+      })),
+    }, { status: 200 });
   } catch (error) {
     console.error('GET /api/users error:', error);
     return NextResponse.json({ error: 'Failed to load users' }, { status: 500 });
@@ -47,8 +56,16 @@ export async function POST(request: NextRequest) {
 
     const existingUser = await usersCollection.findOne({ username });
     if (existingUser) {
-      return NextResponse.json({ error: 'මෙම Username එක දැනටමත් පද්ධතියේ ඇත!' }, { status: 409 });
+      return NextResponse.json({ error: '??? Username ?? ??????? ???????? ??!' }, { status: 409 });
     }
+
+    const allUsers = await usersCollection.find({}).toArray();
+    const assignmentError = validateUserAssignment(role, counter_no, allUsers);
+    if (assignmentError) {
+      return NextResponse.json({ error: assignmentError }, { status: 409 });
+    }
+
+    const isCashier = String(role).toLowerCase() !== 'admin';
 
     await usersCollection.insertOne({
       username,
@@ -56,6 +73,7 @@ export async function POST(request: NextRequest) {
       password: await hashPassword(password),
       role,
       counter_no,
+      availability_status: isCashier ? 'available' : undefined,
       created_at: new Date(),
     });
 
@@ -80,11 +98,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
 
-    const update: Record<string, string> = {
+    const role = String(body.role || 'Cashier');
+    const counter_no = String(body.counter_no || 'Counter 1');
+
+    const db = await getBillingDb();
+    const allUsers = await db.collection('users').find({}).toArray();
+    const assignmentError = validateUserAssignment(role, counter_no, allUsers, old_username);
+    if (assignmentError) {
+      return NextResponse.json({ error: assignmentError }, { status: 409 });
+    }
+
+    const update: Record<string, string | undefined> = {
       username: new_username,
       full_name: String(body.full_name || ''),
-      role: String(body.role || 'Cashier'),
-      counter_no: String(body.counter_no || 'Counter 1'),
+      role,
+      counter_no,
+      availability_status: role.toLowerCase() === 'admin' ? undefined : 'available',
     };
 
     const newPassword = String(body.password || '').trim();
@@ -96,8 +125,10 @@ export async function PUT(request: NextRequest) {
       update.password = await hashPassword(newPassword);
     }
 
-    const db = await getBillingDb();
-    await db.collection('users').updateOne({ username: old_username }, { $set: update });
+    await db.collection('users').updateOne({ username: old_username }, {
+      $set: update,
+      ...(role.toLowerCase() === 'admin' ? { $unset: { availability_status: '' } } : {}),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -46,7 +46,7 @@ export default function StockAlertsPage() {
                 <tr key={String(p.barcode)}>
                   <td className="font-mono text-left">{String(p.barcode)}</td>
                   <td className="font-bold label-si text-left">{String(p.name)}</td>
-                  <td className="text-right whitespace-nowrap">Rs. {Number(p.our_price).toFixed(2)}</td>
+                  <td className="text-right whitespace-nowrap">LKR {Number(p.our_price).toFixed(2)}</td>
                   <td className="text-center">
                     <span className={Number(p.stock) <= 0 ? 'badge-danger' : 'badge-warning'}>{String(p.stock)}</span>
                   </td>
@@ -59,3 +59,4 @@ export default function StockAlertsPage() {
     </div>
   );
 }
+

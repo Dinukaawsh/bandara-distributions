@@ -71,8 +71,8 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
               <tr key={p.barcode}>
                 <td className="font-mono text-left">{p.barcode}</td>
                 <td className="label-si font-bold text-left">{p.name}</td>
-                <td className="text-right whitespace-nowrap">Rs. {Number(p.market_price).toFixed(2)}</td>
-                <td className="text-right whitespace-nowrap">Rs. {Number(p.our_price).toFixed(2)}</td>
+                <td className="text-right whitespace-nowrap">LKR {Number(p.market_price).toFixed(2)}</td>
+                <td className="text-right whitespace-nowrap">LKR {Number(p.our_price).toFixed(2)}</td>
                 <td className="text-center">
                   <span className={p.stock <= 0 ? 'badge-danger' : 'badge-stock'}>{p.stock}</span>
                 </td>
@@ -85,3 +85,4 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
     </Modal>
   );
 }
+

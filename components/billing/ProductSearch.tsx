@@ -83,7 +83,7 @@ export function ProductSearch({ products, onSelect, disabled }: ProductSearchPro
               <span className="font-mono text-xs text-slate-500">{p.barcode}</span>
               <span className="mx-2">—</span>
               <span className="font-semibold">{p.name}</span>
-              <span className="float-right text-primary">Rs. {p.our_price.toFixed(2)}</span>
+              <span className="float-right text-primary">LKR {p.our_price.toFixed(2)}</span>
             </li>
           ))}
         </ul>
@@ -96,3 +96,4 @@ export function ProductSearch({ products, onSelect, disabled }: ProductSearchPro
     </div>
   );
 }
+

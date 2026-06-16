@@ -72,7 +72,7 @@ export function BillReceipt({
             <tr key={item.barcode}>
               <td className="label-si py-1">
                 {item.qty} x {item.name}
-                <div className="text-[10px] text-slate-500">@ Rs. {item.ourPrice.toFixed(2)}</div>
+                <div className="text-[10px] text-slate-500">@ LKR {item.ourPrice.toFixed(2)}</div>
               </td>
               <td className="text-right font-bold py-1">{item.total.toFixed(2)}</td>
             </tr>
@@ -82,12 +82,13 @@ export function BillReceipt({
 
       <div className="bill-receipt-totals text-xs space-y-1 border-t border-dashed border-slate-400 pt-2 label-si">
         <div className="flex justify-between"><span>{ln.items}</span><span>{totalQty}</span></div>
-        <div className="flex justify-between font-bold text-sm"><span>{ln.total}</span><span>Rs. {grandTotal.toFixed(2)}</span></div>
-        <div className="flex justify-between text-emerald-700"><span>{ln.customer_paid}</span><span>Rs. {cashPaid.toFixed(2)}</span></div>
-        <div className="flex justify-between font-bold text-red-600"><span>{ln.change_return}</span><span>Rs. {changeDue.toFixed(2)}</span></div>
+        <div className="flex justify-between font-bold text-sm"><span>{ln.total}</span><span>LKR {grandTotal.toFixed(2)}</span></div>
+        <div className="flex justify-between text-emerald-700"><span>{ln.customer_paid}</span><span>LKR {cashPaid.toFixed(2)}</span></div>
+        <div className="flex justify-between font-bold text-red-600"><span>{ln.change_return}</span><span>LKR {changeDue.toFixed(2)}</span></div>
       </div>
 
       <p className="text-center text-[10px] mt-4 label-si">{ln.thank_you}</p>
     </div>
   );
 }
+

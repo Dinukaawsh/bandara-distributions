@@ -7,6 +7,7 @@ export type SessionUser = {
   role: string;
   full_name: string;
   counter_no: string;
+  availability_status: 'available' | 'busy';
   lang: 'si' | 'en';
 };
 
@@ -51,18 +52,20 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const db = await getBillingDb();
   const dbUser = await db.collection('users').findOne(
     { username: payload.sub },
-    { projection: { username: 1, role: 1, full_name: 1, counter_no: 1 } }
+    { projection: { username: 1, role: 1, full_name: 1, counter_no: 1, availability_status: 1 } }
   );
 
   if (!dbUser) return null;
 
   const lang = cookieStore.get('lang')?.value === 'en' ? 'en' : 'si';
+  const status = dbUser.availability_status === 'busy' ? 'busy' : 'available';
 
   return {
     username: dbUser.username,
     role: String(dbUser.role || 'cashier'),
     full_name: String(dbUser.full_name || dbUser.username),
     counter_no: String(dbUser.counter_no || 'Counter 1'),
+    availability_status: status,
     lang,
   };
 }
@@ -83,6 +86,7 @@ async function getLegacySessionUser(
     role: String(dbUser.role || cookieStore.get('role')?.value || 'cashier'),
     full_name: String(dbUser.full_name || username),
     counter_no: String(dbUser.counter_no || cookieStore.get('counter_no')?.value || 'Counter 1'),
+    availability_status: dbUser.availability_status === 'busy' ? 'busy' : 'available',
     lang: cookieStore.get('lang')?.value === 'en' ? 'en' : 'si',
   };
 }
