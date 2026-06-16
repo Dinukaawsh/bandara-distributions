@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BillReceipt } from '@/components/billing/BillReceipt';
 import { BillViewModal } from '@/components/billing/BillViewModal';
-import { Alert, Button, Card, PageLoader } from '@/components/ui';
+import { Alert, Button, Card, PageLoader, Pagination } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useSession } from '@/hooks/useSession';
 
 type BillRow = {
@@ -58,6 +59,15 @@ export default function MyDayPage() {
   }, [loading, user, router]);
 
   const moneyLabel = lang === 'si' ? 'රුපියල්' : 'LKR';
+  const {
+    paginatedItems: paginatedOrders,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(data?.orders || []);
 
   if (loading || pageLoading) return <PageLoader />;
   if (!data) return <Alert type="error">{t('අද දින දත්ත නොමැත', 'No daily data available')}</Alert>;
@@ -95,7 +105,7 @@ export default function MyDayPage() {
             <tbody>
               {data.orders.length === 0 ? (
                 <tr><td colSpan={5} className="text-center py-8 text-slate-500 label-si">{t('අද බිල්පත් නොමැත', 'No bills for today')}</td></tr>
-              ) : data.orders.map((o) => (
+              ) : paginatedOrders.map((o) => (
                 <tr key={o.bill_no}>
                   <td className="whitespace-nowrap">{o.bill_no}</td>
                   <td className="text-right whitespace-nowrap">{moneyLabel} {Number(o.total_amount).toFixed(2)}</td>
@@ -120,6 +130,14 @@ export default function MyDayPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
       </Card>
 
       <BillViewModal

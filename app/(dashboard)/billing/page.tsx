@@ -6,9 +6,10 @@ import { BillPreviewModal } from '@/components/billing/BillPreviewModal';
 import { BillReceipt } from '@/components/billing/BillReceipt';
 import { ProductSearch } from '@/components/billing/ProductSearch';
 import { EndOfDayModal, type EndOfDayReport } from '@/components/modals/EndOfDayModal';
-import { Alert, Button, Card, Input, Modal, PageLoader } from '@/components/ui';
+import { Alert, Button, Card, Input, Modal, PageLoader, Pagination } from '@/components/ui';
 import { useDialog } from '@/hooks/useDialog';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useSession } from '@/hooks/useSession';
 import { getTranslations } from '@/lib/translations';
 
@@ -119,6 +120,15 @@ export default function BillingPage() {
     if (!q) return productEntries;
     return productEntries.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q));
   }, [catalogSearch, productEntries]);
+  const {
+    paginatedItems: paginatedAdminBills,
+    page: adminBillsPage,
+    setPage: setAdminBillsPage,
+    totalPages: adminBillsTotalPages,
+    totalItems: adminBillsTotalItems,
+    startIndex: adminBillsStartIndex,
+    endIndex: adminBillsEndIndex,
+  } = usePagination(adminBills);
   const topCashierToday = useMemo(() => {
     const map: Record<string, number> = {};
     for (const o of adminBills) {
@@ -554,7 +564,7 @@ export default function BillingPage() {
               placeholder={t('නම හෝ බාර්කෝඩ්', 'Name or barcode')}
             />
             <div className="mt-3 max-h-[520px] space-y-2 overflow-y-auto pr-1 custom-scrollbar">
-              {filteredCatalog.slice(0, 200).map((item) => (
+              {filteredCatalog.map((item) => (
                 <button
                   key={item.barcode}
                   type="button"
@@ -647,7 +657,7 @@ export default function BillingPage() {
                       <tr>
                         <td colSpan={5} className="text-center py-6 text-slate-500 label-si">{t('අද බිල්පත් නොමැත', 'No bills today')}</td>
                       </tr>
-                    ) : adminBills.map((o) => (
+                    ) : paginatedAdminBills.map((o) => (
                       <tr key={String(o.bill_no)}>
                         <td>{String(o.bill_no)}</td>
                         <td className="label-si">{String(o.cashier_name)}</td>
@@ -659,6 +669,14 @@ export default function BillingPage() {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                page={adminBillsPage}
+                totalPages={adminBillsTotalPages}
+                totalItems={adminBillsTotalItems}
+                startIndex={adminBillsStartIndex}
+                endIndex={adminBillsEndIndex}
+                onPageChange={setAdminBillsPage}
+              />
             </div>
           </Card>
         )}

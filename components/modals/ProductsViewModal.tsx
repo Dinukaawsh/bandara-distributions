@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui';
+import { Button, Pagination } from '@/components/ui';
 import { Modal } from '@/components/ui/Modal';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 
 type Product = {
   barcode: string;
@@ -22,6 +23,15 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
   const { t } = useLang();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const {
+    paginatedItems,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(products);
 
   useEffect(() => {
     if (!open) return;
@@ -48,6 +58,7 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
       {loading ? (
         <p className="text-center text-sm text-slate-500 label-si">{t('පූරණය වෙමින්...', 'Loading...')}</p>
       ) : (
+        <>
         <div className="data-table-wrap custom-scrollbar">
         <table className="data-table">
           <colgroup>
@@ -67,7 +78,7 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
+            {paginatedItems.map((p) => (
               <tr key={p.barcode}>
                 <td className="font-mono text-left">{p.barcode}</td>
                 <td className="label-si font-bold text-left">{p.name}</td>
@@ -81,6 +92,15 @@ export function ProductsViewModal({ open, onClose }: ProductsViewModalProps) {
           </tbody>
         </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
+        </>
       )}
     </Modal>
   );

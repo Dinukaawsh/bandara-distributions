@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Button, Card, Checkbox } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, Pagination } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useSession } from '@/hooks/useSession';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -12,6 +13,15 @@ export default function StockAlertsPage() {
   const { confirm } = useDialog();
   const [products, setProducts] = useState<Array<Record<string, unknown>>>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const {
+    paginatedItems,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(products);
 
   useEffect(() => {
     fetch('/api/stock-alerts').then(async (res) => { if (res.ok) setProducts((await res.json()).products || []); });
@@ -78,7 +88,7 @@ export default function StockAlertsPage() {
                     {t('සියලු තොග සතුටුදායකයි!', 'All stock levels are good!')}
                   </td>
                 </tr>
-              ) : products.map((p) => (
+              ) : paginatedItems.map((p) => (
                 <tr key={String(p.barcode)}>
                   <td className="text-center">
                     <Checkbox
@@ -100,6 +110,14 @@ export default function StockAlertsPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
       </Card>
     </div>
   );

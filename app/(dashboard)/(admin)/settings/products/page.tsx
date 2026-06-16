@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Checkbox, Input, Modal, SearchBar } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, Input, Modal, Pagination, SearchBar } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
 
@@ -41,6 +42,15 @@ export default function SettingsProductsPage() {
   }
 
   const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.barcode.toLowerCase().includes(search.toLowerCase()));
+  const {
+    paginatedItems,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(filtered, undefined, search);
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedBarcodes.includes(p.barcode));
 
   const metrics = useMemo(() => {
@@ -109,7 +119,7 @@ export default function SettingsProductsPage() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr><td colSpan={7} className="text-center text-slate-500 py-8">{t('No products found', 'No products found')}</td></tr>
-              ) : filtered.map((p) => (
+              ) : paginatedItems.map((p) => (
                 <tr key={p.barcode}>
                   <td className="text-center"><Checkbox checked={selectedBarcodes.includes(p.barcode)} onChange={(checked) => setSelectedBarcodes((prev) => checked ? [...prev, p.barcode] : prev.filter((v) => v !== p.barcode))} /></td>
                   <td className="font-mono">{p.barcode}</td>
@@ -134,6 +144,14 @@ export default function SettingsProductsPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
       </Card>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('Add New Product', 'Add New Product')} size="lg" footerSplit footer={<>

@@ -13,3 +13,4 @@ export { Dropdown } from './Dropdown';
 export type { DropdownOption } from './Dropdown';
 export { Checkbox } from './Checkbox';
 export { PageLoader, Spinner } from './Spinner';
+export { Pagination } from './Pagination';

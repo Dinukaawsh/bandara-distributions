@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BillReceipt } from '@/components/billing/BillReceipt';
 import { BillViewModal } from '@/components/billing/BillViewModal';
-import { Alert, Button, Card, Checkbox, DatePicker, FilterBar, MonthPicker, Select } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, DatePicker, FilterBar, MonthPicker, Pagination, Select } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
 
@@ -79,6 +80,19 @@ export default function SalesReportPage() {
     [filterOptions.counters, t]
   );
   const allSelected = orders.length > 0 && selectedBills.length === orders.length;
+  const {
+    paginatedItems: paginatedOrders,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(
+    orders,
+    undefined,
+    `${month}-${dateFrom}-${dateTo}-${useDateRange}-${cashierFilter}-${counterFilter}`
+  );
 
   return (
     <div className="sales-report-page">
@@ -152,7 +166,7 @@ export default function SalesReportPage() {
             <tbody>
               {orders.length === 0 ? (
                 <tr><td colSpan={9} className="text-center py-8 text-slate-500 label-si">{t('වාර්තා නැත', 'No records found')}</td></tr>
-              ) : orders.map((o) => (
+              ) : paginatedOrders.map((o) => (
                 <tr key={String(o.bill_no)}>
                   <td className="text-center"><Checkbox checked={selectedBills.includes(String(o.bill_no))} onChange={(checked) => {
                     const key = String(o.bill_no);
@@ -185,6 +199,14 @@ export default function SalesReportPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
       </Card>
 
       <div className="no-print mt-4 text-center">

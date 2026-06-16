@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui';
+import { Button, Pagination } from '@/components/ui';
 import { Modal } from '@/components/ui/Modal';
 import { useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 
 type StockAlertsViewModalProps = {
   open: boolean;
@@ -14,6 +15,15 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
   const { t } = useLang();
   const [products, setProducts] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(false);
+  const {
+    paginatedItems,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(products);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +54,7 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
           {t('සියලු තොග සතුටුදායකයි!', 'All stock levels are good!')}
         </p>
       ) : (
+        <>
         <div className="data-table-wrap custom-scrollbar">
         <table className="data-table">
           <colgroup>
@@ -61,7 +72,7 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
+            {paginatedItems.map((p) => (
               <tr key={String(p.barcode)}>
                 <td className="font-mono text-left">{String(p.barcode)}</td>
                 <td className="label-si font-bold text-left">{String(p.name)}</td>
@@ -76,6 +87,15 @@ export function StockAlertsViewModal({ open, onClose }: StockAlertsViewModalProp
           </tbody>
         </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
+        </>
       )}
     </Modal>
   );

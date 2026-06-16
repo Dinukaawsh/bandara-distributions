@@ -1,8 +1,9 @@
 ﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Checkbox, Input, Modal, Select } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, Input, Modal, Pagination, Select } from '@/components/ui';
 import { roleOptions, useLang } from '@/hooks/useLang';
+import { usePagination } from '@/hooks/usePagination';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
 import { counterOptionsForRole, defaultCounterForRole, getTakenCashierCounters, isAdminRole } from '@/lib/counters';
@@ -47,6 +48,15 @@ export default function ManageUsersPage() {
   const admins = useMemo(() => users.filter((u) => isAdminRole(u.role)), [users]);
   const cashiers = useMemo(() => users.filter((u) => !isAdminRole(u.role)), [users]);
   const nonProtected = useMemo(() => users.filter((u) => u.username.toLowerCase() !== 'admin'), [users]);
+  const {
+    paginatedItems,
+    page,
+    setPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(users);
   const allSelected = nonProtected.length > 0 && nonProtected.every((u) => selectedUsers.includes(u.username));
 
   useEffect(() => { fetchUsers(); }, []);
@@ -115,7 +125,7 @@ export default function ManageUsersPage() {
             <tbody>
               {users.length === 0 ? (
                 <tr><td colSpan={7} className="py-6 text-center text-sm text-slate-500">{t('පරිශීලකයින් නැත', 'No users')}</td></tr>
-              ) : users.map((u) => (
+              ) : paginatedItems.map((u) => (
                 <tr key={u.username}>
                   <td className="text-center">
                     {u.username.toLowerCase() === 'admin' ? '—' : (
@@ -166,6 +176,14 @@ export default function ManageUsersPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          onPageChange={setPage}
+        />
       </Card>
 
       <Card title={t('පරිපාලකයින්', 'Administrators')}><p className="text-sm">{admins.length}</p></Card>
