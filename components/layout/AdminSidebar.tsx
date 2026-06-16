@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HiOutlineChartBar, HiOutlineCog6Tooth, HiOutlineShoppingBag, HiOutlineUserCircle } from 'react-icons/hi2';
+import { MdOutlinePointOfSale, MdOutlineStorefront, MdOutlinePeopleAlt, MdOutlineInventory2, MdOutlineEventAvailable, MdOutlinePassword } from 'react-icons/md';
 import { mainNav, navLabel, userNav } from '@/lib/nav';
 import type { Lang } from '@/lib/translations';
 
@@ -15,6 +17,19 @@ type AdminSidebarProps = {
 export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const navItems = mainNav.filter((item) => !item.adminOnly || isAdmin);
+  const iconMap: Record<string, React.ReactNode> = {
+    dashboard: <HiOutlineChartBar />,
+    billing: <MdOutlinePointOfSale />,
+    products: <MdOutlineInventory2 />,
+    store: <MdOutlineStorefront />,
+    users: <MdOutlinePeopleAlt />,
+    report: <HiOutlineChartBar />,
+    alerts: <HiOutlineShoppingBag />,
+    settings: <HiOutlineCog6Tooth />,
+    myday: <MdOutlineEventAvailable />,
+    profile: <HiOutlineUserCircle />,
+    password: <MdOutlinePassword />,
+  };
 
   return (
     <>
@@ -54,7 +69,7 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
                 onClick={onClose}
                 className={active ? 'admin-sidebar-link-active' : 'admin-sidebar-link'}
               >
-                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-icon text-lg">{iconMap[item.icon] || <HiOutlineChartBar />}</span>
                 <span className="label-si">{navLabel(item, lang)}</span>
               </Link>
             );
@@ -74,7 +89,7 @@ export function AdminSidebar({ lang, isAdmin, open, onClose }: AdminSidebarProps
                 onClick={onClose}
                 className={active ? 'admin-sidebar-link-active' : 'admin-sidebar-link'}
               >
-                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-icon text-lg">{iconMap[item.icon] || <HiOutlineChartBar />}</span>
                 <span className="label-si">{navLabel(item, lang)}</span>
               </Link>
             );

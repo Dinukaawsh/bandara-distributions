@@ -11,4 +11,5 @@ export { SearchBar } from './SearchBar';
 export { LanguageSelect, Select } from './Select';
 export { Dropdown } from './Dropdown';
 export type { DropdownOption } from './Dropdown';
+export { Checkbox } from './Checkbox';
 export { PageLoader, Spinner } from './Spinner';

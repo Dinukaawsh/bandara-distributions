@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, DatePicker, FilterBar, MonthPicker, Select } from '@/components/ui';
+import { Alert, Button, Card, Checkbox, DatePicker, FilterBar, MonthPicker, Select } from '@/components/ui';
 import { useLang } from '@/hooks/useLang';
 import { useDialog } from '@/hooks/useDialog';
 import { useSession } from '@/hooks/useSession';
@@ -20,6 +20,7 @@ export default function SalesReportPage() {
   const [counterFilter, setCounterFilter] = useState('');
   const [stats, setStats] = useState({ total_sales: 0, total_profit: 0, total_bills: 0 });
   const [orders, setOrders] = useState<Array<Record<string, unknown>>>([]);
+  const [selectedBills, setSelectedBills] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<{ cashiers: string[]; counters: string[] }>({
     cashiers: [],
     counters: [],
@@ -42,6 +43,7 @@ export default function SalesReportPage() {
         setStats(d.stats);
         setOrders(d.orders || []);
         setFilterOptions(d.filters || { cashiers: [], counters: [] });
+        setSelectedBills([]);
       }
     });
   }, [month, dateFrom, dateTo, useDateRange, cashierFilter, counterFilter]);
@@ -65,6 +67,8 @@ export default function SalesReportPage() {
     ],
     [filterOptions.counters, t]
   );
+
+  const allSelected = orders.length > 0 && selectedBills.length === orders.length;
 
   return (
     <div className="sales-report-page">
@@ -97,6 +101,22 @@ export default function SalesReportPage() {
           <Select label={t('කැෂියර්', 'Cashier')} value={cashierFilter} onChange={(e) => setCashierFilter(e.target.value)} options={cashierOptions} className="min-w-[160px]" />
           <Select label={t('කවුන්ටරය', 'Counter')} value={counterFilter} onChange={(e) => setCounterFilter(e.target.value)} options={counterOptions} className="min-w-[160px]" />
           <Button onClick={loadReport}>{t('සොයන්න', 'Search')}</Button>
+          <Button
+            variant="danger"
+            disabled={selectedBills.length === 0}
+            onClick={async () => {
+              if (selectedBills.length === 0) return;
+              const ok = await confirm({
+                title: t('තෝරාගත් බිල්පත් මකන්න', 'Delete Selected Bills'),
+                message: t('තෝරාගත් බිල්පත් මකා දමන්නද?', 'Delete selected bills?'),
+              });
+              if (!ok) return;
+              await fetch(`/api/sales-report?bill_nos=${encodeURIComponent(selectedBills.join(','))}`, { method: 'DELETE' });
+              loadReport();
+            }}
+          >
+            {t('තෝරාගත් දේ මකන්න', 'Delete Selected')}
+          </Button>
         </div>
       </FilterBar>
 
@@ -127,6 +147,14 @@ export default function SalesReportPage() {
           <table className="data-table">
             <thead>
               <tr>
+                <th className="text-center">
+                  <Checkbox
+                    checked={allSelected}
+                    onChange={(checked) => {
+                      setSelectedBills(checked ? orders.map((o) => String(o.bill_no)) : []);
+                    }}
+                  />
+                </th>
                 <th>{t('බිල් අංකය', 'Bill No')}</th>
                 <th>{t('කැෂියර්', 'Cashier')}</th>
                 <th>{t('කවුන්ටරය', 'Counter')}</th>
@@ -140,12 +168,23 @@ export default function SalesReportPage() {
             <tbody>
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-slate-500 label-si">
+                  <td colSpan={9} className="text-center py-8 text-slate-500 label-si">
                     {t('වාර්තා නැත', 'No records found')}
                   </td>
                 </tr>
               ) : orders.map((o) => (
                 <tr key={String(o.bill_no)}>
+                  <td className="text-center">
+                    <Checkbox
+                      checked={selectedBills.includes(String(o.bill_no))}
+                      onChange={(checked) => {
+                        const key = String(o.bill_no);
+                        setSelectedBills((prev) =>
+                          checked ? [...prev, key] : prev.filter((k) => k !== key)
+                        );
+                      }}
+                    />
+                  </td>
                   <td>{String(o.bill_no)}</td>
                   <td className="label-si">{String(o.cashier_name)}</td>
                   <td>{String(o.counter_no)}</td>

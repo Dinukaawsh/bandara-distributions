@@ -67,20 +67,24 @@ export function AdminTopbar({ user, lang, onLangChange, onMenuClick, title }: Ad
       </div>
 
       <div className="admin-topbar-right">
-        <span className={isAdmin ? 'badge-admin' : 'badge-cashier'}>
-          {isAdmin ? (lang === 'si' ? 'පරිපාලක' : 'Admin') : (lang === 'si' ? 'කැෂියර්' : 'Cashier')}
-        </span>
-        {!isAdmin && (
-          <span className={isBusy ? 'badge-warning' : 'badge-stock'}>
-            {isBusy ? (lang === 'si' ? 'කාර්යබහුල' : 'Busy') : (lang === 'si' ? 'ලබා ගත හැක' : 'Available')}
+        <div className="admin-topbar-badges">
+          <span className={isAdmin ? 'badge-admin' : 'badge-cashier'}>
+            {isAdmin ? (lang === 'si' ? 'පරිපාලක' : 'Admin') : (lang === 'si' ? 'කැෂියර්' : 'Cashier')}
           </span>
-        )}
-        <div className="w-full sm:w-28">
-          <LanguageSelect value={lang} onChange={changeLang} />
+          {!isAdmin && (
+            <span className={isBusy ? 'badge-warning' : 'badge-stock'}>
+              {isBusy ? (lang === 'si' ? 'කාර්යබහුල' : 'Busy') : (lang === 'si' ? 'ලබා ගත හැක' : 'Available')}
+            </span>
+          )}
         </div>
-        <Button variant="danger" onClick={handleLogout} className="w-full sm:w-auto !py-2 !text-xs">
-          {lang === 'si' ? 'ලොග් අවුට්' : 'Logout'}
-        </Button>
+        <div className="admin-topbar-controls">
+          <div className="admin-topbar-lang">
+            <LanguageSelect value={lang} onChange={changeLang} />
+          </div>
+          <Button variant="danger" onClick={handleLogout} className="admin-topbar-logout !py-2 !text-xs">
+            {lang === 'si' ? 'ලොග් අවුට්' : 'Logout'}
+          </Button>
+        </div>
       </div>
     </header>
   );

@@ -107,6 +107,14 @@ body {
   @apply px-3.5 py-2.5 text-sm text-slate-500;
 }
 
+/* Checkbox */
+.checkbox {
+  @apply flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-white text-transparent transition;
+}
+.checkbox-checked {
+  @apply border-primary bg-primary text-white;
+}
+
 /* Buttons */
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60;
@@ -285,6 +293,18 @@ body {
 }
 .admin-topbar-right {
   @apply flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end;
+}
+.admin-topbar-badges {
+  @apply flex w-full flex-wrap items-center gap-2 sm:w-auto;
+}
+.admin-topbar-controls {
+  @apply flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap;
+}
+.admin-topbar-lang {
+  @apply min-w-[8rem] flex-1 sm:min-w-[7rem] sm:flex-none;
+}
+.admin-topbar-logout {
+  @apply w-full sm:w-auto sm:min-w-[6.5rem];
 }
 .admin-content {
   @apply flex-1 overflow-auto p-3 sm:p-4 lg:p-6;

@@ -47,38 +47,38 @@ export default function AdminDashboardPage() {
   }, [data]);
 
   if (loading) return <PageLoader />;
-  if (!data) return <Alert type="error">{t('???? ????? ?????????', 'Failed to load dashboard data')}</Alert>;
+  if (!data) return <Alert type="error">{t('ඩෑෂ්බෝඩ් දත්ත පූරණය අසාර්ථකයි', 'Failed to load dashboard data')}</Alert>;
 
   return (
     <div className="space-y-5">
       <div className="page-header">
-        <h1 className="page-title label-si">{t('??????? ????????', 'Admin Dashboard')}</h1>
+        <h1 className="page-title label-si">{t('පරිපාලක ඩෑෂ්බෝඩ්', 'Admin Dashboard')}</h1>
         <p className="page-subtitle label-si">
-          {t('???? ?????? ????, ?? ??? ???????? ?? ??????? ???????', 'Overall business metrics, today progress, and cashier status')}
+          {t('මුළු ව්‍යාපාර දත්ත, අද දින ප්‍රගතිය සහ කැෂියර් තත්ත්වය', 'Overall business metrics, today progress, and cashier status')}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('?? ????????', 'Today Sales')}</p>
+          <p className="dashboard-metric-label">{t('අද විකුණුම්', 'Today Sales')}</p>
           <p className="dashboard-metric-value">LKR {Number(data.stats.today_sales).toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('?? ????', 'Today Profit')}</p>
+          <p className="dashboard-metric-label">{t('අද ලාභය', 'Today Profit')}</p>
           <p className="dashboard-metric-value">LKR {Number(data.stats.today_profit).toFixed(2)}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('?? ???????', 'Today Bills')}</p>
+          <p className="dashboard-metric-label">{t('අද බිල්පත්', 'Today Bills')}</p>
           <p className="dashboard-metric-value">{data.stats.today_bills}</p>
         </Card>
         <Card className="dashboard-metric-card">
-          <p className="dashboard-metric-label">{t('??? ?? ???? ???????', 'Available Cashiers')}</p>
+          <p className="dashboard-metric-label">{t('ලබා ගත හැකි කැෂියර්', 'Available Cashiers')}</p>
           <p className="dashboard-metric-value">{data.stats.cashiers_available} / {data.stats.cashiers_total}</p>
         </Card>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2" title={t('?????? ??? 7 ????????', 'Last 7 Days Sales')}>
+        <Card className="xl:col-span-2" title={t('පසුගිය දින 7 විකුණුම්', 'Last 7 Days Sales')}>
           <div className="space-y-2">
             {data.sales_by_day.map((row) => {
               const pct = Math.max(4, (row.sales / maxDailySales) * 100);
@@ -95,10 +95,10 @@ export default function AdminDashboardPage() {
           </div>
         </Card>
 
-        <Card title={t('?? ??????? ????????', 'Counter Sales Today')}>
+        <Card title={t('අද කවුන්ටර විකුණුම්', 'Counter Sales Today')}>
           <div className="space-y-2">
             {data.counter_sales_today.length === 0 ? (
-              <p className="text-sm text-slate-500 label-si">{t('?? ???????? ?????', 'No sales today')}</p>
+              <p className="text-sm text-slate-500 label-si">{t('අද විකුණුම් නොමැත', 'No sales today')}</p>
             ) : data.counter_sales_today.map((row) => {
               const pct = Math.max(5, (row.amount / maxCounterSales) * 100);
               return (
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card title={t('??????? ???????', 'Cashier Status')}>
+        <Card title={t('කැෂියර් තත්ත්වය', 'Cashier Status')}>
           <div className="space-y-2">
             {data.cashier_statuses.map((c) => (
               <div key={`${c.full_name}-${c.counter_no}`} className="dashboard-status-row">
@@ -125,19 +125,19 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-slate-500">{c.counter_no}</p>
                 </div>
                 <span className={c.availability_status === 'busy' ? 'badge-warning' : 'badge-stock'}>
-                  {c.availability_status === 'busy' ? t('?????????', 'Busy') : t('??? ?? ???', 'Available')}
+                  {c.availability_status === 'busy' ? t('කාර්යබහුල', 'Busy') : t('ලබා ගත හැක', 'Available')}
                 </span>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title={t('???? ?????? ???????', 'Overall Summary')}>
+        <Card title={t('මුළු පද්ධති සාරාංශය', 'Overall Summary')}>
           <div className="space-y-2 text-sm">
-            <div className="dashboard-summary-row"><span>{t('???? ???????? (????? ????)', 'Total Sales (All Time)')}</span><strong>LKR {data.stats.total_sales_all_time.toFixed(2)}</strong></div>
-            <div className="dashboard-summary-row"><span>{t('???? ???? (????? ????)', 'Total Profit (All Time)')}</span><strong>LKR {data.stats.total_profit_all_time.toFixed(2)}</strong></div>
-            <div className="dashboard-summary-row"><span>{t('???? ???????', 'Total Bills')}</span><strong>{data.stats.total_bills}</strong></div>
-            <div className="dashboard-summary-row"><span>{t('???? ?????', 'Total Products')}</span><strong>{data.stats.total_products}</strong></div>
+            <div className="dashboard-summary-row"><span>{t('මුළු විකුණුම් (සියලු කාලය)', 'Total Sales (All Time)')}</span><strong>LKR {data.stats.total_sales_all_time.toFixed(2)}</strong></div>
+            <div className="dashboard-summary-row"><span>{t('මුළු ලාභය (සියලු කාලය)', 'Total Profit (All Time)')}</span><strong>LKR {data.stats.total_profit_all_time.toFixed(2)}</strong></div>
+            <div className="dashboard-summary-row"><span>{t('මුළු බිල්පත්', 'Total Bills')}</span><strong>{data.stats.total_bills}</strong></div>
+            <div className="dashboard-summary-row"><span>{t('මුළු භාණ්ඩ', 'Total Products')}</span><strong>{data.stats.total_products}</strong></div>
           </div>
         </Card>
       </div>

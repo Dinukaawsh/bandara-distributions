@@ -81,24 +81,31 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const user = await getSessionUser();
     if (!user || user.role.toLowerCase() !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
     const db = await getBillingDb();
-    const oldOrders = await db
-      .collection('sales_orders')
-      .find({ created_at: { $lt: threeMonthsAgo } })
-      .project({ bill_no: 1 })
-      .toArray();
+    const { searchParams } = new URL(request.url);
+    const billNosParam = searchParams.get('bill_nos');
+    let billNos: string[] = [];
 
-    const billNos = oldOrders.map((o) => o.bill_no);
+    if (billNosParam) {
+      billNos = billNosParam.split(',').map((s) => s.trim()).filter(Boolean);
+    } else {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      const oldOrders = await db
+        .collection('sales_orders')
+        .find({ created_at: { $lt: threeMonthsAgo } })
+        .project({ bill_no: 1 })
+        .toArray();
+      billNos = oldOrders.map((o) => String(o.bill_no));
+    }
+
     if (billNos.length > 0) {
       await db.collection('sales_items').deleteMany({ bill_no: { $in: billNos } });
       await db.collection('sales_orders').deleteMany({ bill_no: { $in: billNos } });

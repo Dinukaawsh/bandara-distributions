@@ -532,8 +532,8 @@ export default function BillingPage() {
       </div>
 
       {isAdmin && (
-        <div className="no-print mt-4">
-          <Button variant="warning" className="w-full" onClick={handleEndOfDay}>
+        <div className="no-print mt-4 flex justify-end">
+          <Button variant="warning" className="w-full sm:w-auto sm:min-w-52" onClick={handleEndOfDay}>
             {ln.end_of_day}
           </Button>
         </div>
